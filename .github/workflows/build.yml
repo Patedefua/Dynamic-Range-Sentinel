@@ -12,23 +12,25 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
-    - name: 1. Clonar Repositorio
+    - name: 1. Clonar Repositorio y Submódulos de JUCE
       uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
-    - name: 2. Construir con Docker (Solo para Linux)
+    - name: 2. Instalar Dependencias (Linux)
       if: matrix.os == 'ubuntu-latest'
       run: |
-        docker build -t opus-builder .
-        docker run --rm -v ${{ github.workspace }}:/work opus-builder /bin/bash -c "cmake . -B Builds && cmake --build Builds --config Release"
+        sudo apt-get update
+        sudo apt-get install -y build-essential pkg-config libasound2-dev libjack-jackd2-dev libx11-dev libxinerama-dev libxrandr-dev libxcursor-dev libgl-dev libfreetype6-dev libfontconfig1-dev libgtk-3-dev
 
-    - name: 3. Construir (Windows y macOS)
-      if: matrix.os != 'ubuntu-latest'
+    - name: 3. Construir el Plugin con CMake
       run: |
-        cmake . -B Builds
+        cmake -B Builds -DCMAKE_BUILD_TYPE=Release .
         cmake --build Builds --config Release
     
     - name: 4. Subir el Artefacto
       uses: actions/upload-artifact@v4
       with:
         name: DRS-Build-${{ matrix.os }}
-        path: Builds/DynamicRangeSentinel_artefacts/Release/VST/
+        # LA SOLUCIÓN: La ruta correcta y más genérica para los artefactos de JUCE/CMake
+        path: Builds/DynamicRangeSentinel_artefacts/Release/VST/DynamicRangeSentinel.vst

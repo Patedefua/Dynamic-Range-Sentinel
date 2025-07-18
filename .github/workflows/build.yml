@@ -9,21 +9,25 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # LA SOLUCIÓN: Hemos eliminado 'ubuntu-latest' de la lista.
-        os: [windows-latest, macos-latest]
+        os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
     - name: 1. Clonar Repositorio
       uses: actions/checkout@v4
 
-    # El paso de dependencias de Linux ya no es necesario.
+    - name: 2. Construir con Docker (Solo para Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        docker build -t opus-builder .
+        docker run --rm -v ${{ github.workspace }}:/work opus-builder /bin/bash -c "cmake . -B Builds && cmake --build Builds --config Release"
 
-    - name: 2. Construir el Plugin con CMake
+    - name: 3. Construir (Windows y macOS)
+      if: matrix.os != 'ubuntu-latest'
       run: |
         cmake . -B Builds
         cmake --build Builds --config Release
     
-    - name: 3. Subir el Artefacto
+    - name: 4. Subir el Artefacto
       uses: actions/upload-artifact@v4
       with:
         name: DRS-Build-${{ matrix.os }}

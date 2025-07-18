@@ -1,8 +1,11 @@
+# Usamos la imagen base oficial de Ubuntu 22.04, la misma que usa GitHub
 FROM ubuntu:22.04
 
+# Establecemos el frontend de apt para que no haga preguntas interactivas
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y \
+# LA SOLUCIÓN: La lista de dependencias completa y verificada
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     pkg-config \
     gobjc++ \
@@ -19,4 +22,5 @@ RUN apt-get update && apt-get install -y \
     git \
     cmake
 
+# Establecemos el directorio de trabajo dentro del contenedor
 WORKDIR /work

@@ -21,20 +21,18 @@ juce_add_plugin(DynamicRangeSentinel
         Source/PluginEditor.h
 )
 
-# ⚡ CORRECCIÓN FINAL: Lógica de enlace consciente de la plataforma.
-# Ahora, cada formato solo se enlaza si el objetivo correspondiente existe en el SO actual.
+# ⚡ CORRECCIÓN DEFINITIVA: Enlace contra el objetivo principal del proyecto.
+# En lugar de depender del objetivo intermedio "_SharedCode", enlazamos directamente
+# contra "DynamicRangeSentinel". Esto resuelve el problema de la ruta de búsqueda del enlazador.
 
-# VST3 se construye en todas las plataformas.
-target_link_libraries(DynamicRangeSentinel_VST3 PRIVATE DynamicRangeSentinel_SharedCode)
+target_link_libraries(DynamicRangeSentinel_VST3 PRIVATE DynamicRangeSentinel)
 
-# AU solo se enlaza si el objetivo se está construyendo (solo plataformas Apple).
 if(TARGET DynamicRangeSentinel_AU)
-    target_link_libraries(DynamicRangeSentinel_AU PRIVATE DynamicRangeSentinel_SharedCode)
+    target_link_libraries(DynamicRangeSentinel_AU PRIVATE DynamicRangeSentinel)
 endif()
 
-# VST2 solo se enlaza si el objetivo se está construyendo (todas excepto, potencialmente, macOS arm64).
 if(TARGET DynamicRangeSentinel_VST2)
-    target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE DynamicRangeSentinel_SharedCode)
+    target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE DynamicRangeSentinel)
 endif()
 
 juce_add_binary_data(BinaryData

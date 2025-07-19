@@ -32,6 +32,7 @@ juce_add_plugin(DynamicRangeSentinel
     Source/PluginProcessor.h
     Source/PluginEditor.cpp
     Source/PluginEditor.h
+    Source/VSTMain.cpp
 )
 
 # Recursos gráficos y fuentes (se generan como BinaryData)

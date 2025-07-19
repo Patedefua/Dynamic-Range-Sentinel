@@ -31,6 +31,9 @@ jobs:
         SDK_PATH="vst2sdk"
         if [ "${{ matrix.os }}" == "macos-latest" ]; then
           cmake . -B Builds -D VST2_SDK_PATH=$SDK_PATH -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+        elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+          # ⚡ CORRECCIÓN FINAL: Reintroducida la compilación acéfala para Linux.
+          cmake . -B Builds -D VST2_SDK_PATH=$SDK_PATH -D JUCE_HEADLESS_PLUGIN_CLIENT=1
         else
           cmake . -B Builds -D VST2_SDK_PATH=$SDK_PATH
         fi
@@ -50,7 +53,7 @@ jobs:
         if [ -n "$VST3_PATH" ]; then
           mv "$VST3_PATH" "$PACKAGE_DIR/"
         fi
-
+        
         if [ "${{ matrix.os }}" == "windows-latest" ]; then
           VST2_PATH=$(find Builds -path "*Release/${PLUGIN_NAME}.dll" -print -quit)
           if [ -n "$VST2_PATH" ]; then
@@ -62,7 +65,7 @@ jobs:
           if [ -n "$VST2_PATH" ]; then
             mv "$VST2_PATH" "$PACKAGE_DIR/"
           fi
-          ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Linux.zip"
+          ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Linux-Headless.zip"
         elif [ "${{ matrix.os }}" == "macos-latest" ]; then
           VST2_PATH=$(find Builds -name "${PLUGIN_NAME}.vst" -type d -print -quit)
           if [ -n "$VST2_PATH" ]; then
@@ -70,7 +73,7 @@ jobs:
           fi
           ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Mac-Universal.zip"
         fi
-
+        
         cd $PACKAGE_DIR && zip -r ../$ZIP_NAME . && cd ..
         echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
 

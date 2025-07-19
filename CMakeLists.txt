@@ -1,79 +1,60 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.22)
+project(DynamicRangeSentinel VERSION 1.0.1 LANGUAGES CXX C OBJCXX)
 
-project(DynamicRangeSentinel VERSION 1.0.0)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# JUCE vía FetchContent
 include(FetchContent)
 FetchContent_Declare(
-  juce
-  GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-  GIT_TAG master
+    JUCE
+    GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+    GIT_TAG        7.0.10 # Usamos una versión estable, no 'master'
 )
-FetchContent_MakeAvailable(juce)
+FetchContent_MakeAvailable(JUCE)
 
-# Ruta al SDK VST2 (asegúrate de que aeffect.h esté aquí)
-set(VST2_SDK_PATH "${CMAKE_SOURCE_DIR}/vst2sdk/public.sdk/source/vst2.x")
-
-# Plugin
-juce_add_plugin(DynamicRangeSentinel
-  COMPANY_NAME "Patedefua"
-  PLUGIN_NAME "Dynamic Range Sentinel"
-  PLUGIN_MANUFACTURER_CODE PdFa
-  PLUGIN_CODE DRS1
-  FORMATS VST2
-  PRODUCT_NAME "Dynamic Range Sentinel"
-  COPY_PLUGIN_AFTER_BUILD TRUE
-  PLUGIN_GUI TRUE
-  SOURCE_FILES
+# Biblioteca para nuestro código fuente, hace el sistema modular.
+add_library(SharedCode INTERFACE)
+target_sources(SharedCode INTERFACE
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
     Source/PluginEditor.cpp
     Source/PluginEditor.h
-    Source/VSTMain.cpp
 )
 
-# Recursos gráficos y fuentes (se generan como BinaryData)
+# Recursos gráficos y fuentes.
 juce_add_binary_data(BinaryData
-  SOURCES
-    Source/Resources/background.png
-    Source/Resources/circular_grille.png
-    Source/Resources/gain_reduction_frame.png
-    Source/Resources/gain_reduction_led.png
-    Source/Resources/hires_logo.png
-    Source/Resources/knob.png
-    Source/Resources/logo_plate.png
-    Source/Resources/quality_selector_knob.png
-    Source/Resources/slider_handle.png
-    Source/Resources/slider_track.png
-    Source/Resources/switch_off.png
-    Source/Resources/switch_on.png
-    Source/Resources/vu_meter_background.png
-    Source/Resources/vu_meter_background_peak.png
-    Source/Resources/vu_meter_needle.png
-    Source/Resources/waveform_graphic.png
-    Source/Resources/Sarpanch-Regular.ttf
+    SOURCES
+        Source/Resources/background.png
+        Source/Resources/circular_grille.png
+        Source/Resources/gain_reduction_frame.png
+        Source/Resources/gain_reduction_led.png
+        Source/Resources/hires_logo.png
+        Source/Resources/knob.png
+        Source/Resources/logo_plate.png
+        Source/Resources/quality_selector_knob.png
+        Source/Resources/slider_handle.png
+        Source/Resources/slider_track.png
+        Source/Resources/switch_off.png
+        Source/Resources/switch_on.png
+        Source/Resources/vu_meter_background.png
+        Source/Resources/vu_meter_background_peak.png
+        Source/Resources/vu_meter_needle.png
+        Source/Resources/waveform_graphic.png
+        Source/Resources/Sarpanch-Regular.ttf
 )
 
-# Incluir rutas necesarias
-target_include_directories(DynamicRangeSentinel
-  PRIVATE
-    "${VST2_SDK_PATH}"
+# El puente de visibilidad entre el código y los recursos.
+target_link_libraries(SharedCode INTERFACE BinaryData)
+
+# El comando de JUCE para crear el plugin, simple y limpio.
+juce_add_plugin(DynamicRangeSentinel
+    COMPANY_NAME          "OpusNexus"
+    FORMATS               VST2 VST3
+    BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
+    PLUGIN_VST2_CATEGORY  "Dynamics"
 )
 
-# Linkear librerías necesarias
-target_link_libraries(DynamicRangeSentinel
-  PRIVATE
-    juce::juce_audio_utils
-    BinaryData
-)
-
-# Definiciones necesarias para JUCE + VST2
-target_compile_definitions(DynamicRangeSentinel
-  PRIVATE
-    JUCE_VST3_CAN_REPLACE_VST2=0
-    JucePlugin_Build_VST=1
-    JucePlugin_Build_VST2=1
-)
+# Enlace explícito y condicional, la solución robusta.
+if(TARGET DynamicRangeSentinel_VST3)
+    target_link_libraries(DynamicRangeSentinel_VST3 PRIVATE SharedCode)
+endif()
+if(TARGET DynamicRangeSentinel_VST2)
+    target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE SharedCode)
+endif()

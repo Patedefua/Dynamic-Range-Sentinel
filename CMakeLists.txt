@@ -42,9 +42,8 @@ target_link_libraries(SharedCode INTERFACE BinaryData)
 
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME          "OpusNexus"
-    FORMATS               VST2 VST3 AU
+    FORMATS               AU
     BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
-    PLUGIN_VST2_CATEGORY  "Dynamics"
 )
 
 set(PLUGIN_TARGETS "")

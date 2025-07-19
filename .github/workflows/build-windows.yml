@@ -9,35 +9,28 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Install dependencies
-      uses: ilammy/msvc-dev-cmd@v1
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v1
 
-    - name: Download VST2 SDK headers (if missing)
-      run: |
-        $path = "VST_SDK/VST2_SDK/pluginterfaces/vst2.x"
-        if (-not (Test-Path "$path/aeffect.h")) {
-          Write-Host "VST2 headers not found, downloading..."
-          New-Item -ItemType Directory -Force -Path $path | Out-Null
-          Invoke-WebRequest https://raw.githubusercontent.com/steinbergmedia/vst2sdk/master/pluginterfaces/vst2.x/aeffect.h -OutFile "$path/aeffect.h"
-          Invoke-WebRequest https://raw.githubusercontent.com/steinbergmedia/vst2sdk/master/pluginterfaces/vst2.x/aeffectx.h -OutFile "$path/aeffectx.h"
-        } else {
-          Write-Host "VST2 headers found."
-        }
+      - name: Configure project with CMake
+        run: |
+          cmake -B Builds -DCMAKE_BUILD_TYPE=Release
 
-    - name: Configure CMake
-      run: cmake -B Builds -DCMAKE_BUILD_TYPE=Release
+      - name: Build project
+        run: |
+          cmake --build Builds --config Release
 
-    - name: Build plugin
-      run: cmake --build Builds --config Release
-
-    - name: Upload plugin artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: DynamicRangeSentinel
-        path: |
-          Builds/**/*.dll
+      - name: Upload VST2 Plugin (.dll)
+        uses: actions/upload-artifact@v4
+        with:
+          name: DynamicRangeSentinel-VST2
+          path: |
+            Builds/**/DynamicRangeSentinel.dll

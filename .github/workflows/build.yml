@@ -19,12 +19,9 @@ jobs:
       with:
         path: main
 
-    - name: 2. Clonar VST2 SDK
-      uses: actions/checkout@v4
-      with:
-        # ⚡ CORRECCIÓN: Apuntamos a un repositorio del VST2 SDK válido y conocido.
-        repository: 'FigBug/VST2-SDK'
-        path: vst2sdk
+    # ⚡ PROTOCOLO DE FUERZA BRUTA: Usamos git clone directamente para evitar fallos de la acción checkout.
+    - name: 2. Clonar VST2 SDK (Método Directo)
+      run: git clone https://github.com/FigBug/VST2-SDK.git vst2sdk
 
     - name: 3. Instalar Dependencias (Linux)
       working-directory: main

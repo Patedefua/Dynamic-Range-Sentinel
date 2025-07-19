@@ -11,68 +11,29 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
-# --- Platform flags ---
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set(BUILD_WITH_GUI OFF)
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    set(BUILD_WITH_GUI ON)
-else()
-    message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
+# --- Asegurar que solo compila en Windows ---
+if(NOT WIN32)
+    message(FATAL_ERROR "Este plugin está configurado solo para Windows.")
 endif()
 
-# --- Shared plugin source code ---
+# --- Plugin fuente compartida ---
 add_library(SharedCode STATIC)
 target_sources(SharedCode PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
+    Source/PluginEditor.cpp
+    Source/PluginEditor.h
 )
 
-if(BUILD_WITH_GUI)
-    target_sources(SharedCode PRIVATE
-        Source/PluginEditor.cpp
-        Source/PluginEditor.h
-    )
-
-    juce_add_binary_data(BinaryData
-        SOURCES
-            Source/Resources/background.png
-            Source/Resources/circular_grille.png
-            Source/Resources/gain_reduction_frame.png
-            Source/Resources/gain_reduction_led.png
-            Source/Resources/hires_logo.png
-            Source/Resources/knob.png
-            Source/Resources/logo_plate.png
-            Source/Resources/quality_selector_knob.png
-            Source/Resources/slider_handle.png
-            Source/Resources/slider_track.png
-            Source/Resources/switch_off.png
-            Source/Resources/switch_on.png
-            Source/Resources/vu_meter_background.png
-            Source/Resources/vu_meter_background_peak.png
-            Source/Resources/vu_meter_needle.png
-            Source/Resources/waveform_graphic.png
-            Source/Resources/Sarpanch-Regular.ttf
-    )
-
-    target_link_libraries(SharedCode PRIVATE BinaryData)
-endif()
-
-# --- JUCE Modules (segmentados por GUI) ---
-target_link_libraries(SharedCode PRIVATE
-    juce::juce_audio_processors
-    juce::juce_core
+juce_add_binary_data(BinaryData
+    SOURCES
+        Source/Resources/background.png
+        Source/Resources/Sarpanch-Regular.ttf
 )
 
-if(BUILD_WITH_GUI)
-    target_link_libraries(SharedCode PRIVATE
-        juce::juce_audio_utils
-        juce::juce_gui_basics
-        juce::juce_graphics
-        juce::juce_gui_extra
-    )
-endif()
+target_link_libraries(SharedCode PRIVATE BinaryData)
 
-# --- Plugin Target ---
+# --- Plugin Target (VST2 .dll real) ---
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME "OpusNexus"
     PLUGIN_MANUFACTURER_CODE OpNx
@@ -83,10 +44,13 @@ juce_add_plugin(DynamicRangeSentinel
     VST2_CATEGORY Dynamics
 )
 
-target_link_libraries(DynamicRangeSentinel PRIVATE SharedCode)
+target_link_libraries(DynamicRangeSentinel PRIVATE
+    SharedCode
+    juce::juce_audio_utils
+)
 
-# --- Safe macro definitions (escape properly) ---
+# --- Correctas definiciones para que no fallen macros ---
 add_compile_definitions(
-    JucePlugin_Manufacturer=\"Patedefua\"
-    JucePlugin_Name=\"DynamicRangeSentinel\"
+    JucePlugin_Manufacturer="\"Patedefua\""
+    JucePlugin_Name="\"DynamicRangeSentinel\""
 )

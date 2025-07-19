@@ -13,10 +13,10 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up MSVC
+      - name: Set up MSVC Developer Command Prompt
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: Set up CMake
@@ -28,18 +28,19 @@ jobs:
       - name: Build
         run: cmake --build Builds --config Release
 
-      - name: Find and Compress DLL
-        shell: pwsh
+      - name: Find DLLs
+        id: find_dlls
         run: |
-          $dlls = Get-ChildItem -Path Builds -Recurse -Filter *.dll
+          $dlls = Get-ChildItem -Path Builds -Recurse -Filter *.dll | ForEach-Object { $_.FullName }
           if ($dlls.Count -eq 0) {
             Write-Error "❌ No DLLs were found!"
           } else {
-            Compress-Archive -Path $dlls.FullName -DestinationPath DynamicRangeSentinel.zip
+            echo "Found DLLs: $dlls"
+            echo "dlls=$dlls" >> $env:GITHUB_OUTPUT
           }
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+      - name: Upload DLL artifact
+        uses: actions/upload-artifact@v4
         with:
           name: DynamicRangeSentinel
-          path: DynamicRangeSentinel.zip
+          path: ${{ steps.find_dlls.outputs.dlls }}

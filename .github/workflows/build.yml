@@ -1,4 +1,4 @@
-name: Build DynamicRangeSentinel
+name: Build VST2 Plugin
 
 on:
   push:
@@ -8,48 +8,28 @@ on:
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v1
-        with:
-          cmake-version: "3.22.0"
+    - name: Set up CMake
+      uses: jwlawson/actions-setup-cmake@v1
+      with:
+        cmake-version: '3.27.7'
 
-      - name: Setup Ninja
-        uses: seanmiddleditch/gha-setup-ninja@v3
+    - name: Install Linux dependencies
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libasound2-dev libx11-dev libfreetype6-dev libxext-dev libxinerama-dev libxrandr-dev libxcursor-dev
 
-      - name: Install Linux dependencies
-        if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get update && sudo apt-get install -y libx11-dev libfreetype6-dev libxrandr-dev libxinerama-dev libxcursor-dev libxext-dev mesa-common-dev
+    - name: Configure CMake
+      run: cmake -B Builds -DCMAKE_BUILD_TYPE=Release
 
-      - name: Create Build Directory
-        run: cmake -E make_directory ${{github.workspace}}/Builds
-
-      - name: Configure CMake
-        run: |
-          cmake -B Builds -DCMAKE_BUILD_TYPE=Release
-        shell: bash
-
-      - name: Build
-        run: cmake --build Builds --config Release
-
-      - name: Upload VST plugin artifact
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: DynamicRangeSentinel-${{ matrix.os }}
-          path: |
-            **/DynamicRangeSentinel.vst
-            **/DynamicRangeSentinel.vst3
-            **/DynamicRangeSentinel.dll
-            **/DynamicRangeSentinel.so
-            **/DynamicRangeSentinel.dylib
+    - name: Build plugin
+      run: cmake --build Builds --config Release

@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "BinaryData.h"
 
 DynamicRangeSentinelEditor::DynamicRangeSentinelEditor (DynamicRangeSentinelProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)

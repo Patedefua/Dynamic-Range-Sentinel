@@ -15,6 +15,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: 2. Configurar CMake
+      # La ruta al SDK es ahora un directorio local
       run: cmake . -B Builds -D VST2_SDK_PATH="vst2sdk"
 
     - name: 3. Construir el Plugin con CMake
@@ -28,19 +29,16 @@ jobs:
         PACKAGE_DIR="dist"
         mkdir -p $PACKAGE_DIR
 
-        # Encontrar y mover VST3
         VST3_PATH=$(find Builds -name "${PLUGIN_NAME}.vst3" -print -quit)
         if [ -n "$VST3_PATH" ]; then
           mv "$VST3_PATH" "$PACKAGE_DIR/"
         fi
-        
-        # Encontrar y mover VST2
+
         VST2_PATH=$(find Builds -path "*Release/${PLUGIN_NAME}.dll" -print -quit)
         if [ -n "$VST2_PATH" ]; then
           mv "$VST2_PATH" "$PACKAGE_DIR/"
         fi
-        
-        # Comprimir los artefactos encontrados
+
         ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Win.zip"
         cd $PACKAGE_DIR && zip -r ../$ZIP_NAME . && cd ..
         echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT

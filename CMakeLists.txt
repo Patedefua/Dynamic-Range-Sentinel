@@ -21,14 +21,18 @@ juce_add_plugin(DynamicRangeSentinel
         Source/PluginEditor.h
 )
 
-# ⚡ CORRECCIÓN ESTRUCTURAL CRÍTICA: Enlace explícito del código compartido.
-# Este bloque instruye al enlazador que conecte nuestro código de plugin (el "motor")
-# con cada formato de salida (AU, VST3, VST2). Este es el "puente" que faltaba.
-target_link_libraries(DynamicRangeSentinel_AU PRIVATE DynamicRangeSentinel_SharedCode)
+# ⚡ CORRECCIÓN FINAL: Lógica de enlace consciente de la plataforma.
+# Ahora, cada formato solo se enlaza si el objetivo correspondiente existe en el SO actual.
+
+# VST3 se construye en todas las plataformas.
 target_link_libraries(DynamicRangeSentinel_VST3 PRIVATE DynamicRangeSentinel_SharedCode)
 
-# JUCE puede decidir no construir VST2 en ciertas plataformas (como macOS arm64).
-# Este condicional asegura que solo intentemos enlazarlo si el objetivo de construcción existe.
+# AU solo se enlaza si el objetivo se está construyendo (solo plataformas Apple).
+if(TARGET DynamicRangeSentinel_AU)
+    target_link_libraries(DynamicRangeSentinel_AU PRIVATE DynamicRangeSentinel_SharedCode)
+endif()
+
+# VST2 solo se enlaza si el objetivo se está construyendo (todas excepto, potencialmente, macOS arm64).
 if(TARGET DynamicRangeSentinel_VST2)
     target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE DynamicRangeSentinel_SharedCode)
 endif()

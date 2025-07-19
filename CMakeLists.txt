@@ -62,6 +62,6 @@ juce_add_plugin(DynamicRangeSentinel
 target_link_libraries(DynamicRangeSentinel PRIVATE SharedCode)
 
 add_compile_definitions(
-    JucePlugin_Manufacturer="\"Patedefua\""
-    JucePlugin_Name="\"DynamicRangeSentinel\""
+    'JucePlugin_Manufacturer="Patedefua"'
+    'JucePlugin_Name="DynamicRangeSentinel"'
 )

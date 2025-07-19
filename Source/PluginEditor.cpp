@@ -1,42 +1,42 @@
-#include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "BinaryData.h"
-#include <juce_audio_processors/juce_audio_processors.h>
-#include <juce_audio_utils/juce_audio_utils.h>
-#include <juce_gui_extra/juce_gui_extra.h>
 
-
-#if JUCE_BUILD_GUI
-
-DynamicRangeSentinelEditor::DynamicRangeSentinelEditor (DynamicRangeSentinelProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+DynamicRangeSentinelEditor::DynamicRangeSentinelEditor (DynamicRangeSentinelAudioProcessor& p)
+    : AudioProcessorEditor (&p), processorRef (p)
 {
-    backgroundImage = juce::ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
+    setSize (400, 200);
 
-    targetPeakKnob.setSliderStyle(juce::Slider::RotaryVerticalDrag);
-    targetPeakKnob.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    addAndMakeVisible(targetPeakKnob);
-    targetPeakAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "TARGET_PEAK", targetPeakKnob);
+    thresholdSlider.setSliderStyle (juce::Slider::LinearVertical);
+    thresholdSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 80, 20);
+    thresholdSlider.setRange (-60.0f, 0.0f);
+    thresholdSlider.setValue (*p.thresholdParam);
+    thresholdSlider.onValueChange = [this] {
+        processorRef.thresholdParam->setValueNotifyingHost ((float) thresholdSlider.getValue());
+    };
+    addAndMakeVisible (thresholdSlider);
+    thresholdLabel.setText ("Threshold", juce::dontSendNotification);
+    addAndMakeVisible (thresholdLabel);
 
-    lookaheadSlider.setSliderStyle(juce::Slider::LinearHorizontal);
-    lookaheadSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    addAndMakeVisible(lookaheadSlider);
-    lookaheadAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "LOOKAHEAD", lookaheadSlider);
-
-    setSize (700, 450);
+    ceilingSlider.setSliderStyle (juce::Slider::LinearVertical);
+    ceilingSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 80, 20);
+    ceilingSlider.setRange (-60.0f, 0.0f);
+    ceilingSlider.setValue (*p.ceilingParam);
+    ceilingSlider.onValueChange = [this] {
+        processorRef.ceilingParam->setValueNotifyingHost ((float) ceilingSlider.getValue());
+    };
+    addAndMakeVisible (ceilingSlider);
+    ceilingLabel.setText ("Ceiling", juce::dontSendNotification);
+    addAndMakeVisible (ceilingLabel);
 }
 
-DynamicRangeSentinelEditor::~DynamicRangeSentinelEditor() {}
+DynamicRangeSentinelEditor::~DynamicRangeSentinelEditor() = default;
 
-void DynamicRangeSentinelEditor::paint (juce::Graphics& g)
-{
-    g.drawImage(backgroundImage, getLocalBounds().toFloat());
+void DynamicRangeSentinelEditor::paint (juce::Graphics& g) {
+    g.fillAll (juce::Colours::black);
 }
 
-void DynamicRangeSentinelEditor::resized()
-{
-    targetPeakKnob.setBounds(95, 175, 150, 150);
-    lookaheadSlider.setBounds(90, 395, 520, 25);
+void DynamicRangeSentinelEditor::resized() {
+    thresholdSlider.setBounds (50, 30, 120, 150);
+    thresholdLabel.setBounds (50, 10, 120, 20);
+    ceilingSlider.setBounds (230, 30, 120, 150);
+    ceilingLabel.setBounds (230, 10, 120, 20);
 }
-
-#endif // JUCE_BUILD_GUI

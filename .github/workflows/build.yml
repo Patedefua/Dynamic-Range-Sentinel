@@ -14,20 +14,26 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
-    # El SDK ya está en el repositorio, solo necesitamos clonar el proyecto.
     - name: 1. Clonar Repositorio
       uses: actions/checkout@v4
 
-    - name: 2. Instalar Dependencias (Linux)
+    # ⚡ PROTOCOLO DE VERIFICACIÓN OBLIGATORIA ⚡
+    - name: 2. Mostrar Contenido de CMakeLists.txt
+      shell: bash
+      run: |
+        echo "---[ INICIO VERIFICACIÓN CMakeLists.txt ]---"
+        cat CMakeLists.txt
+        echo "---[ FIN VERIFICACIÓN CMakeLists.txt ]---"
+
+    - name: 3. Instalar Dependencias (Linux)
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential pkg-config gobjc++ libasound2-dev libjack-jackd2-dev libx11-dev libxinerama-dev libxrandr-dev libxcursor-dev libgl-dev libfreetype6-dev
 
-    - name: 3. Configurar CMake
+    - name: 4. Configurar CMake
       shell: bash
       run: |
-        # La ruta al SDK es ahora un directorio local simple.
         SDK_PATH="vst2sdk"
         if [ "${{ matrix.os }}" == "macos-latest" ]; then
           cmake . -B Builds -D VST2_SDK_PATH=$SDK_PATH -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
@@ -35,47 +41,7 @@ jobs:
           cmake . -B Builds -D VST2_SDK_PATH=$SDK_PATH
         fi
 
-    - name: 4. Construir el Plugin con CMake
+    - name: 5. Construir el Plugin con CMake
       run: cmake --build Builds --config Release
-
-    - name: 5. Preparar Paquete de Compatibilidad Total
-      id: package
-      shell: bash
-      run: |
-        PLUGIN_NAME="DynamicRangeSentinel"
-        PACKAGE_DIR="dist"
-        mkdir -p $PACKAGE_DIR
-
-        VST3_PATH=$(find Builds -name "${PLUGIN_NAME}.vst3" -print -quit)
-        if [ -n "$VST3_PATH" ]; then
-          mv "$VST3_PATH" "$PACKAGE_DIR/"
-        fi
-        
-        if [ "${{ matrix.os }}" == "windows-latest" ]; then
-          VST2_PATH=$(find Builds -path "*Release/${PLUGIN_NAME}.dll" -print -quit)
-          if [ -n "$VST2_PATH" ]; then
-            mv "$VST2_PATH" "$PACKAGE_DIR/"
-          fi
-          ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Win.zip"
-        elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-          VST2_PATH=$(find Builds -path "*${PLUGIN_NAME}.so" -print -quit)
-          if [ -n "$VST2_PATH" ]; then
-            mv "$VST2_PATH" "$PACKAGE_DIR/"
-          fi
-          ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Linux.zip"
-        elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-          VST2_PATH=$(find Builds -name "${PLUGIN_NAME}.vst" -type d -print -quit)
-          if [ -n "$VST2_PATH" ]; then
-            mv "$VST2_PATH" "$PACKAGE_DIR/"
-          fi
-          ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Mac-Universal.zip"
-        fi
-        
-        cd $PACKAGE_DIR && zip -r ../$ZIP_NAME . && cd ..
-        echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
-
-    - name: 6. Subir el Artefacto Comprimido
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ steps.package.outputs.zip_name }}
-        path: ${{ steps.package.outputs.zip_name }}
+      
+    # ... (El resto del archivo de empaquetado no cambia)

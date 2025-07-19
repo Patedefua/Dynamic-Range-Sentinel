@@ -28,9 +28,12 @@ jobs:
       - name: Build
         run: cmake --build Builds --config Release
 
+      - name: List output DLLs
+        run: dir Builds /s /b | findstr ".dll"
+
       - name: Upload Plugin
         uses: actions/upload-artifact@v4
         with:
           name: DynamicRangeSentinel-VST2-Windows
           path: |
-            Builds/Release/*.dll
+            Builds/**/Release/*.dll

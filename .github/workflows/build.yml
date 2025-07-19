@@ -36,7 +36,11 @@ jobs:
 
     - name: 3.2 Configurar CMake (Linux)
       if: matrix.os == 'ubuntu-latest'
-      run: cmake . -B Builds -D VST2_SDK_PATH=vst2sdk -D JUCE_HEADLESS_PLUGIN_CLIENT=1
+      run: cmake . -B Builds \
+        -D VST2_SDK_PATH=vst2sdk \
+        -D JUCE_HEADLESS_PLUGIN_CLIENT=1 \
+        -D JUCE_BUILD_GUI_CLASSES=OFF \
+        -D JUCE_USE_GUI=OFF
 
     - name: 3.3 Configurar CMake (macOS)
       if: matrix.os == 'macos-latest'

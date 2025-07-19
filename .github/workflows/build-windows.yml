@@ -1,36 +1,31 @@
-name: Build on Windows
+# JUCE Config
+juce_add_plugin(DynamicRangeSentinel
+    COMPANY_NAME "Patedefua"
+    IS_SYNTH FALSE
+    NEEDS_MIDI_INPUT FALSE
+    NEEDS_MIDI_OUTPUT FALSE
+    IS_MIDI_EFFECT FALSE
+    EDITOR_WANTS_KEYBOARD_FOCUS FALSE
+    COPY_PLUGIN_AFTER_BUILD TRUE
+    PLUGIN_MANUFACTURER_CODE Juce
+    PLUGIN_CODE Drs1
+    FORMATS VST2
+    PRODUCT_NAME "DynamicRangeSentinel"
+)
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+# Activar VST2 y definir ruta
+set(JUCE_VST2SDK_LOCATION "${CMAKE_SOURCE_DIR}/vst2sdk/public.sdk")
 
-jobs:
-  build-windows:
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: pwsh
+target_sources(DynamicRangeSentinel PRIVATE
+    Source/PluginProcessor.cpp
+    Source/PluginEditor.cpp
+)
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+target_compile_definitions(DynamicRangeSentinel PRIVATE
+    JUCE_VST2_CAN_REPLACE_VST3=0
+)
 
-      - name: Set up CMake
-        uses: jwlawson/actions-setup-cmake@v1
-
-      - name: Configure project with CMake
-        run: |
-          cmake -B Builds -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build project
-        run: |
-          cmake --build Builds --config Release
-
-      - name: Upload VST2 Plugin (.dll)
-        uses: actions/upload-artifact@v4
-        with:
-          name: DynamicRangeSentinel-VST2
-          path: |
-            Builds/**/DynamicRangeSentinel.dll
+target_link_libraries(DynamicRangeSentinel PRIVATE
+    juce::juce_audio_processors
+    juce::juce_gui_extra
+)

@@ -14,7 +14,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(juce)
 
-# Ruta al SDK VST2
+# Ruta al SDK VST2 (debe existir el archivo aeffect.h aquí)
 set(VST2_SDK_PATH "${CMAKE_SOURCE_DIR}/vst2sdk/public.sdk/source/vst2.x")
 
 # Agregar plugin
@@ -34,7 +34,7 @@ juce_add_plugin(DynamicRangeSentinel
     Source/PluginEditor.h
 )
 
-# Recursos binarios
+# Recursos binarios (imágenes y fuente)
 juce_add_binary_data(BinaryData
   SOURCES
     Source/Resources/background.png

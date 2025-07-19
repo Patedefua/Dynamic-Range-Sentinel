@@ -21,7 +21,8 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential pkg-config gobjc++ libasound2-dev libjack-jackd2-dev libx11-dev libxinerama-dev libxrandr-dev libxcursor-dev libgl-dev libfreetype6-dev libfontconfig1-dev libgtk-3-dev
+        # ⚡ FORTIFICACIÓN: Añadido libwebkit2gtk-4.0-dev, requerido por juce_gui_extra
+        sudo apt-get install -y build-essential pkg-config gobjc++ libasound2-dev libjack-jackd2-dev libx11-dev libxinerama-dev libxrandr-dev libxcursor-dev libwebkit2gtk-4.0-dev libgtk-3-dev libgl-dev libfreetype6-dev
 
     - name: 3. Configurar CMake
       shell: bash
@@ -44,17 +45,14 @@ jobs:
         mkdir -p $PACKAGE_DIR
 
         if [ "${{ matrix.os }}" == "windows-latest" ]; then
-          # Encuentra dinámicamente el artefacto .vst3
           PLUGIN_PATH=$(find Builds -name "${PLUGIN_NAME}.vst3" -print -quit)
           mv "$PLUGIN_PATH" "$PACKAGE_DIR/"
           ZIP_NAME="${PLUGIN_NAME}-VST3-Win.zip"
         elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-          # Encuentra dinámicamente el artefacto .vst3
           PLUGIN_PATH=$(find Builds -name "${PLUGIN_NAME}.vst3" -print -quit)
           mv "$PLUGIN_PATH" "$PACKAGE_DIR/"
           ZIP_NAME="${PLUGIN_NAME}-VST3-Linux.zip"
-        elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-          # Encuentra dinámicamente el artefacto .component (que es un directorio)
+        elif [ "${{ matrix.os }}" == "macos-latest" ];
           PLUGIN_PATH=$(find Builds -name "${PLUGIN_NAME}.component" -type d -print -quit)
           mv "$PLUGIN_PATH" "$PACKAGE_DIR/"
           ZIP_NAME="${PLUGIN_NAME}-AU-Mac-Universal.zip"

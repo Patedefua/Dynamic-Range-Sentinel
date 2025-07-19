@@ -17,7 +17,7 @@ FetchContent_MakeAvailable(juce)
 # Ruta al SDK VST2
 set(VST2_SDK_PATH "${CMAKE_SOURCE_DIR}/vst2sdk/public.sdk/source/vst2.x")
 
-# Plugin
+# Plugin VST2 con GUI
 juce_add_plugin(DynamicRangeSentinel
   COMPANY_NAME "Patedefua"
   PLUGIN_NAME "Dynamic Range Sentinel"
@@ -27,7 +27,6 @@ juce_add_plugin(DynamicRangeSentinel
   PRODUCT_NAME "Dynamic Range Sentinel"
   COPY_PLUGIN_AFTER_BUILD TRUE
   PLUGIN_GUI TRUE
-  OUTPUT_NAME "DynamicRangeSentinel"
   SOURCE_FILES
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
@@ -35,7 +34,7 @@ juce_add_plugin(DynamicRangeSentinel
     Source/PluginEditor.h
 )
 
-# Recursos
+# Recursos .png y .ttf
 juce_add_binary_data(BinaryData
   SOURCES
     Source/Resources/background.png
@@ -63,6 +62,7 @@ target_link_libraries(DynamicRangeSentinel
     BinaryData
 )
 
+# Definiciones para habilitar VST2
 target_compile_definitions(DynamicRangeSentinel
   PRIVATE
     JUCE_VST3_CAN_REPLACE_VST2=0
@@ -70,6 +70,7 @@ target_compile_definitions(DynamicRangeSentinel
     JucePlugin_Build_VST2=1
 )
 
+# Incluir encabezados del SDK VST2
 target_include_directories(DynamicRangeSentinel
   PRIVATE "${VST2_SDK_PATH}"
 )

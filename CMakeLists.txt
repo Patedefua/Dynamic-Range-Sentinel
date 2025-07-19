@@ -25,11 +25,26 @@ target_sources(SharedCode PRIVATE
     Source/PluginEditor.h
 )
 
-juce_add_binary_data(BinaryData
-    SOURCES
-        Source/Resources/background.png
-        Source/Resources/Sarpanch-Regular.ttf
-)
+   juce_add_binary_data(BinaryData
+        SOURCES
+            Source/Resources/background.png
+            Source/Resources/circular_grille.png
+            Source/Resources/gain_reduction_frame.png
+            Source/Resources/gain_reduction_led.png
+            Source/Resources/hires_logo.png
+            Source/Resources/knob.png
+            Source/Resources/logo_plate.png
+            Source/Resources/quality_selector_knob.png
+            Source/Resources/slider_handle.png
+            Source/Resources/slider_track.png
+            Source/Resources/switch_off.png
+            Source/Resources/switch_on.png
+            Source/Resources/vu_meter_background.png
+            Source/Resources/vu_meter_background_peak.png
+            Source/Resources/vu_meter_needle.png
+            Source/Resources/waveform_graphic.png
+            Source/Resources/Sarpanch-Regular.ttf
+    )
 
 target_link_libraries(SharedCode PRIVATE BinaryData)
 

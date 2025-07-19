@@ -5,7 +5,7 @@ project(DynamicRangeSentinel VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# JUCE vía FetchContent
+# JUCE via FetchContent
 include(FetchContent)
 FetchContent_Declare(
   juce
@@ -14,7 +14,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(juce)
 
-# Ruta al SDK VST2 (debe contener aeffect.h)
+# Ruta al SDK VST2
 set(VST2_SDK_PATH "${CMAKE_SOURCE_DIR}/vst2sdk/public.sdk/source/vst2.x")
 
 # Plugin
@@ -25,8 +25,9 @@ juce_add_plugin(DynamicRangeSentinel
   PLUGIN_CODE DRS1
   FORMATS VST2
   PRODUCT_NAME "Dynamic Range Sentinel"
-  PLUGIN_GUI TRUE
   COPY_PLUGIN_AFTER_BUILD TRUE
+  PLUGIN_GUI TRUE
+  OUTPUT_NAME "DynamicRangeSentinel"
   SOURCE_FILES
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
@@ -34,7 +35,7 @@ juce_add_plugin(DynamicRangeSentinel
     Source/PluginEditor.h
 )
 
-# Recursos binarios
+# Recursos
 juce_add_binary_data(BinaryData
   SOURCES
     Source/Resources/background.png
@@ -56,14 +57,12 @@ juce_add_binary_data(BinaryData
     Source/Resources/Sarpanch-Regular.ttf
 )
 
-# Linkeo
 target_link_libraries(DynamicRangeSentinel
   PRIVATE
     juce::juce_audio_utils
     BinaryData
 )
 
-# Definiciones necesarias para VST2 real
 target_compile_definitions(DynamicRangeSentinel
   PRIVATE
     JUCE_VST3_CAN_REPLACE_VST2=0
@@ -71,12 +70,6 @@ target_compile_definitions(DynamicRangeSentinel
     JucePlugin_Build_VST2=1
 )
 
-# Incluir encabezados del SDK VST2
 target_include_directories(DynamicRangeSentinel
   PRIVATE "${VST2_SDK_PATH}"
-)
-
-# Forzar nombre final del DLL para EQ APO (sin espacios)
-set_target_properties(DynamicRangeSentinel PROPERTIES
-  OUTPUT_NAME "DynamicRangeSentinel"
 )

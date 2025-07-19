@@ -2,16 +2,30 @@ cmake_minimum_required(VERSION 3.15)
 
 project(DynamicRangeSentinel VERSION 1.0.0)
 
+set(CMAKE_CXX_STANDARD 17)
+
 # JUCE
 include(FetchContent)
 FetchContent_Declare(
-    juce
-    GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-    GIT_TAG origin/master
+  juce
+  GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+  GIT_TAG origin/master
 )
 FetchContent_MakeAvailable(juce)
 
-# === PLUGIN SETUP ===
+# Ruta al VST2 SDK (ADAPTADA A TU REPO)
+set(VST2_SDK_PATH "${CMAKE_SOURCE_DIR}/vst2sdk/public.sdk/source/vst2.x")
+
+if(NOT EXISTS "${VST2_SDK_PATH}/aeffect.h")
+    message(FATAL_ERROR "VST2 SDK no encontrado en: ${VST2_SDK_PATH}")
+endif()
+
+# Agregar headers de VST2 al path
+include_directories(${VST2_SDK_PATH})
+
+# JUCE Plugin Setup
+juce_enable_vst2()
+
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME "Patedefua"
     IS_SYNTH FALSE
@@ -19,30 +33,21 @@ juce_add_plugin(DynamicRangeSentinel
     NEEDS_MIDI_OUTPUT FALSE
     IS_MIDI_EFFECT FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-    PLUGIN_MANUFACTURER_CODE PdFu
-    PLUGIN_CODE DRS1
+    COPY_PLUGIN_AFTER_BUILD TRUE
+
+    PLUGIN_MANUFACTURER_CODE PdFa
+    PLUGIN_CODE DrSe
     FORMATS VST2
     PRODUCT_NAME "DynamicRangeSentinel"
+
+    SOURCES
+        Source/PluginEditor.cpp
+        Source/PluginEditor.h
+        Source/PluginProcessor.cpp
+        Source/PluginProcessor.h
 )
 
-# === FUENTES DEL PLUGIN ===
-target_sources(DynamicRangeSentinel PRIVATE
-    Source/PluginEditor.cpp
-    Source/PluginEditor.h
-    Source/PluginProcessor.cpp
-    Source/PluginProcessor.h
-)
-
-# === HEADERS VST2 ===
-target_compile_definitions(DynamicRangeSentinel PRIVATE JUCE_VST2_CAN_REPLACE_VST3=0)
-
-# === LINK A JUCE ===
-target_link_libraries(DynamicRangeSentinel PRIVATE
-    juce::juce_audio_utils
-    BinaryData
-)
-
-# === INCLUIR RECURSOS BINARIOS ===
+# Binarios (recursos)
 juce_add_binary_data(BinaryData
     SOURCES
         Source/Resources/background.png
@@ -64,13 +69,16 @@ juce_add_binary_data(BinaryData
         Source/Resources/Sarpanch-Regular.ttf
 )
 
-# === VST2 SDK ===
-if(WIN32)
-    set(VST2_SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/VST_SDK/VST2_SDK")
-    if(EXISTS "${VST2_SDK_DIR}/pluginterfaces/vst2.x/aeffect.h")
-        target_compile_definitions(DynamicRangeSentinel PRIVATE JUCE_VST2_HEADERS_INCLUDED)
-        target_include_directories(DynamicRangeSentinel PRIVATE "${VST2_SDK_DIR}/pluginterfaces/vst2.x")
-    else()
-        message(FATAL_ERROR "VST2 SDK no encontrado. Colócalo en VST_SDK/VST2_SDK/pluginterfaces/vst2.x/")
-    endif()
-endif()
+target_link_libraries(DynamicRangeSentinel PRIVATE
+    juce::juce_audio_utils
+    juce::juce_audio_processors
+    juce::juce_audio_formats
+    juce::juce_core
+    juce::juce_data_structures
+    juce::juce_graphics
+    juce::juce_gui_basics
+    juce::juce_gui_extra
+    BinaryData
+)
+
+target_include_directories(DynamicRangeSentinel PRIVATE ${VST2_SDK_PATH})

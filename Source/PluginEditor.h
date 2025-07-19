@@ -1,29 +1,22 @@
 #pragma once
 
+#include <JuceHeader.h>
 #include "PluginProcessor.h"
-
-#if JUCE_BUILD_GUI
 
 class DynamicRangeSentinelEditor  : public juce::AudioProcessorEditor
 {
 public:
-    DynamicRangeSentinelEditor (DynamicRangeSentinelProcessor&);
+    explicit DynamicRangeSentinelEditor (DynamicRangeSentinelAudioProcessor&);
     ~DynamicRangeSentinelEditor() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
 
 private:
-    DynamicRangeSentinelProcessor& audioProcessor;
+    DynamicRangeSentinelAudioProcessor& processorRef;
 
-    juce::Image backgroundImage;
-    juce::Slider targetPeakKnob;
-    juce::Slider lookaheadSlider;
-
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> targetPeakAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lookaheadAttachment;
+    juce::Slider thresholdSlider, ceilingSlider;
+    juce::Label thresholdLabel, ceilingLabel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DynamicRangeSentinelEditor)
 };
-
-#endif // JUCE_BUILD_GUI

@@ -11,21 +11,27 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
-# --- Asegurar que solo compila en Windows ---
-if(NOT WIN32)
-    message(FATAL_ERROR "Este plugin está configurado solo para Windows.")
+# --- Build GUI only on Windows ---
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(BUILD_WITH_GUI ON)
+else()
+    set(BUILD_WITH_GUI OFF)
 endif()
 
-# --- Plugin fuente compartida ---
+# --- Shared plugin source code ---
 add_library(SharedCode STATIC)
 target_sources(SharedCode PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
-    Source/PluginEditor.cpp
-    Source/PluginEditor.h
 )
 
-   juce_add_binary_data(BinaryData
+if(BUILD_WITH_GUI)
+    target_sources(SharedCode PRIVATE
+        Source/PluginEditor.cpp
+        Source/PluginEditor.h
+    )
+
+    juce_add_binary_data(BinaryData
         SOURCES
             Source/Resources/background.png
             Source/Resources/circular_grille.png
@@ -46,9 +52,15 @@ target_sources(SharedCode PRIVATE
             Source/Resources/Sarpanch-Regular.ttf
     )
 
-target_link_libraries(SharedCode PRIVATE BinaryData)
+    target_link_libraries(SharedCode PRIVATE BinaryData)
+endif()
 
-# --- Plugin Target (VST2 .dll real) ---
+# --- Include JUCE headers for local FetchContent ---
+target_include_directories(SharedCode PRIVATE
+    ${JUCE_SOURCE_DIR}/modules
+)
+
+# --- Plugin Target ---
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME "OpusNexus"
     PLUGIN_MANUFACTURER_CODE OpNx
@@ -64,8 +76,13 @@ target_link_libraries(DynamicRangeSentinel PRIVATE
     juce::juce_audio_utils
 )
 
-# --- Correctas definiciones para que no fallen macros ---
+# --- Safe macro definitions (escape properly) ---
 add_compile_definitions(
-    JucePlugin_Manufacturer="\"Patedefua\""
-    JucePlugin_Name="\"DynamicRangeSentinel\""
+    JucePlugin_Manufacturer=\"Patedefua\"
+    JucePlugin_Name=\"DynamicRangeSentinel\"
+)
+
+# --- Set Windows DLL output folder ---
+set_target_properties(DynamicRangeSentinel PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release"
 )

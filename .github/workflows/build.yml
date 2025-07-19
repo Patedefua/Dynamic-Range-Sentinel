@@ -20,6 +20,7 @@ jobs:
         submodules: 'recursive'
 
     - name: 2. Instalar Dependencias (Linux)
+      if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential pkg-config gobjc++ libasound2-dev libjack-jackd2-dev libx11-dev libxinerama-dev libxrandr-dev libxcursor-dev libgl-dev libfreetype6-dev
@@ -30,6 +31,8 @@ jobs:
         SDK_PATH="vst2sdk"
         if [ "${{ matrix.os }}" == "macos-latest" ]; then
           cmake . -B Builds -D VST2_SDK_PATH=$SDK_PATH -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+        elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+          cmake . -B Builds -D VST2_SDK_PATH=$SDK_PATH -D JUCE_HEADLESS_PLUGIN_CLIENT=1
         else
           cmake . -B Builds -D VST2_SDK_PATH=$SDK_PATH
         fi
@@ -61,7 +64,7 @@ jobs:
           if [ -n "$VST2_PATH" ]; then
             mv "$VST2_PATH" "$PACKAGE_DIR/"
           fi
-          ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Linux.zip"
+          ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Linux-Headless.zip"
         elif [ "${{ matrix.os }}" == "macos-latest" ]; then
           VST2_PATH=$(find Builds -name "${PLUGIN_NAME}.vst" -type d -print -quit)
           if [ -n "$VST2_PATH" ]; then

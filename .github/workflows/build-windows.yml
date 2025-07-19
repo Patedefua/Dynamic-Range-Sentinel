@@ -11,16 +11,23 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout repo
+    - name: Checkout repository
       uses: actions/checkout@v4
 
     - name: Install dependencies
       uses: ilammy/msvc-dev-cmd@v1
 
-    - name: Setup CMake
-      uses: jwlawson/actions-setup-cmake@v1
-      with:
-        cmake-version: '3.27.0'
+    - name: Download VST2 SDK headers (if missing)
+      run: |
+        $path = "VST_SDK/VST2_SDK/pluginterfaces/vst2.x"
+        if (-not (Test-Path "$path/aeffect.h")) {
+          Write-Host "VST2 headers not found, downloading..."
+          New-Item -ItemType Directory -Force -Path $path | Out-Null
+          Invoke-WebRequest https://raw.githubusercontent.com/steinbergmedia/vst2sdk/master/pluginterfaces/vst2.x/aeffect.h -OutFile "$path/aeffect.h"
+          Invoke-WebRequest https://raw.githubusercontent.com/steinbergmedia/vst2sdk/master/pluginterfaces/vst2.x/aeffectx.h -OutFile "$path/aeffectx.h"
+        } else {
+          Write-Host "VST2 headers found."
+        }
 
     - name: Configure CMake
       run: cmake -B Builds -DCMAKE_BUILD_TYPE=Release
@@ -28,19 +35,9 @@ jobs:
     - name: Build plugin
       run: cmake --build Builds --config Release
 
-    - name: Find plugin DLL
-      id: find_dll
-      shell: pwsh
-      run: |
-        $dll = Get-ChildItem -Recurse -Filter "*.dll" -Path Builds | Select-Object -First 1
-        if ($dll) {
-          echo "PLUGIN_PATH=$($dll.FullName)" >> $env:GITHUB_ENV
-        } else {
-          Write-Error "No DLL found"
-        }
-
     - name: Upload plugin artifact
       uses: actions/upload-artifact@v4
       with:
-        name: DynamicRangeSentinel-VST2-Windows
-        path: ${{ env.PLUGIN_PATH }}
+        name: DynamicRangeSentinel
+        path: |
+          Builds/**/*.dll

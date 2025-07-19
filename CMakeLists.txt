@@ -9,34 +9,19 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
-juce_add_plugin(DynamicRangeSentinel
-    COMPANY_NAME          "OpusNexus"
-    FORMATS               VST2 VST3 AU
-    BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
-    PLUGIN_VST2_CATEGORY  "Dynamics"
-    SOURCE_FILES
-        Source/PluginProcessor.cpp
-        Source/PluginProcessor.h
-        Source/PluginEditor.cpp
-        Source/PluginEditor.h
+# ⚡ PARADIGMA 1: AISLAR NUESTRO CÓDIGO
+# Creamos una biblioteca "INTERFACE" (sin compilación propia) solo para agrupar nuestros archivos fuente.
+add_library(SharedCode INTERFACE)
+target_sources(SharedCode INTERFACE
+    Source/PluginProcessor.cpp
+    Source/PluginProcessor.h
+    Source/PluginEditor.cpp
+    Source/PluginEditor.h
 )
 
-# ⚡ CORRECCIÓN DEFINITIVA: Enlace contra el objetivo principal del proyecto.
-# En lugar de depender del objetivo intermedio "_SharedCode", enlazamos directamente
-# contra "DynamicRangeSentinel". Esto resuelve el problema de la ruta de búsqueda del enlazador.
-
-target_link_libraries(DynamicRangeSentinel_VST3 PRIVATE DynamicRangeSentinel)
-
-if(TARGET DynamicRangeSentinel_AU)
-    target_link_libraries(DynamicRangeSentinel_AU PRIVATE DynamicRangeSentinel)
-endif()
-
-if(TARGET DynamicRangeSentinel_VST2)
-    target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE DynamicRangeSentinel)
-endif()
-
+# ⚡ PARADIGMA 2: AISLAR NUESTROS RECURSOS
+# El comando juce_add_binary_data ya crea un objetivo llamado "BinaryData".
 juce_add_binary_data(BinaryData
-    TARGET DynamicRangeSentinel
     SOURCES
         # ... (Lista de 17 archivos sin cambios) ...
         Source/Resources/background.png
@@ -57,3 +42,21 @@ juce_add_binary_data(BinaryData
         Source/Resources/waveform_graphic.png
         Source/Resources/Sarpanch-Regular.ttf
 )
+
+# ⚡ PARADIGMA 3: ENSAMBLAJE EXPLÍCITO
+# Le decimos a juce_add_plugin que construya el plugin, pero en lugar de darle los archivos
+# fuente directamente, le decimos que enlace y consuma nuestras bibliotecas predefinidas.
+# Esto elimina toda ambigüedad y previene el enlace duplicado.
+juce_add_plugin(DynamicRangeSentinel
+    COMPANY_NAME          "OpusNexus"
+    FORMATS               VST2 VST3 AU
+    BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
+    PLUGIN_VST2_CATEGORY  "Dynamics"
+    # El enlace se define aquí, de forma clara y única.
+    LINK_LIBRARIES
+        SharedCode
+        BinaryData
+)
+
+# Ya no son necesarios los enlaces manuales `target_link_libraries`.
+# La directiva LINK_LIBRARIES anterior los hace obsoletos y dañinos.

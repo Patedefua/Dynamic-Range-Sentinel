@@ -11,16 +11,27 @@ FetchContent_MakeAvailable(JUCE)
 
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME          "OpusNexus"
-    # ⚡ EVOLUCIÓN ESTRATÉGICA: Añadimos VST3 y AU. VST2 se construirá donde sea posible.
     FORMATS               VST2 VST3 AU
     BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
-    PLUGIN_VST2_CATEGORY  "Dynamics" # Esta categoría solo aplica a VST2
+    PLUGIN_VST2_CATEGORY  "Dynamics"
     SOURCE_FILES
         Source/PluginProcessor.cpp
         Source/PluginProcessor.h
         Source/PluginEditor.cpp
         Source/PluginEditor.h
 )
+
+# ⚡ CORRECCIÓN ESTRUCTURAL CRÍTICA: Enlace explícito del código compartido.
+# Este bloque instruye al enlazador que conecte nuestro código de plugin (el "motor")
+# con cada formato de salida (AU, VST3, VST2). Este es el "puente" que faltaba.
+target_link_libraries(DynamicRangeSentinel_AU PRIVATE DynamicRangeSentinel_SharedCode)
+target_link_libraries(DynamicRangeSentinel_VST3 PRIVATE DynamicRangeSentinel_SharedCode)
+
+# JUCE puede decidir no construir VST2 en ciertas plataformas (como macOS arm64).
+# Este condicional asegura que solo intentemos enlazarlo si el objetivo de construcción existe.
+if(TARGET DynamicRangeSentinel_VST2)
+    target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE DynamicRangeSentinel_SharedCode)
+endif()
 
 juce_add_binary_data(BinaryData
     TARGET DynamicRangeSentinel

@@ -1,51 +1,46 @@
-name: Build on Windows
+name: build-windows
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  build-windows:
+  build:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-      - name: Setup MSVC
-        uses: ilammy/msvc-dev-cmd@v1
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v1
-        with:
-          cmake-version: '3.27.0'
+    - name: Setup CMake
+      uses: jwlawson/actions-setup-cmake@v1
+      with:
+        cmake-version: '3.27.0'
 
-      - name: Configure CMake project
-        run: cmake -B Builds -DCMAKE_BUILD_TYPE=Release
+    - name: Configure CMake
+      run: cmake -B Builds
 
-      - name: Build project
-        run: cmake --build Builds --config Release
+    - name: Build
+      run: cmake --build Builds --config Release
 
-      - name: List all generated files (debugging)
-        run: Get-ChildItem -Path Builds -Recurse
-        shell: pwsh
+    - name: Find DLL
+      id: find_dll
+      shell: pwsh
+      run: |
+        $dll = Get-ChildItem -Path Builds -Recurse -Filter "DynamicRangeSentinel.dll" | Select-Object -First 1
+        if (-not $dll) {
+          Write-Error "❌ No DLLs were found!"
+        }
+        echo "dll_path=$($dll.FullName)" >> $env:GITHUB_ENV
 
-      - name: Locate built DLL
-        id: find_dll
-        shell: pwsh
-        run: |
-          $dll = Get-ChildItem -Path Builds -Recurse -Filter "*.dll" | Where-Object { $_.Name -like "*Sentinel*.dll" } | Select-Object -First 1
-          if (-not $dll) {
-            Write-Error "❌ No DLLs were found!"
-          } else {
-            echo "✅ Found DLL at: $($dll.FullName)"
-            echo "dll_path=$($dll.FullName)" >> $env:GITHUB_OUTPUT
-          }
-
-      - name: Upload VST2 DLL as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: DynamicRangeSentinel-VST2-Windows
-          path: ${{ steps.find_dll.outputs.dll_path }}
+    - name: Upload DLL Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: DynamicRangeSentinel
+        path: ${{ env.dll_path }}

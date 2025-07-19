@@ -1,143 +1,85 @@
+#include <JuceHeader.h>
 #include "PluginProcessor.h"
-#ifdef JUCE_BUILD_GUI
-#include "PluginEditor.h"
-#endif
 
 DynamicRangeSentinelProcessor::DynamicRangeSentinelProcessor()
-#ifndef JucePlugin_PreferredChannelConfigurations
-    : AudioProcessor(BusesProperties()
-        .withInput("Input", juce::AudioChannelSet::stereo(), true)
-        .withOutput("Output", juce::AudioChannelSet::stereo(), true)
-    ), apvts(*this, nullptr, "Parameters", createParameterLayout())
-#else
     : apvts(*this, nullptr, "Parameters", createParameterLayout())
-#endif
-{
-    targetPeakParam = static_cast<std::atomic<float>*>(apvts.getRawParameterValue("TARGET_PEAK"));
-    lookaheadParam = static_cast<std::atomic<float>*>(apvts.getRawParameterValue("LOOKAHEAD"));
-}
+{}
 
 DynamicRangeSentinelProcessor::~DynamicRangeSentinelProcessor() {}
-
-const juce::String DynamicRangeSentinelProcessor::getName() const { return JucePlugin_Name; }
-
-bool DynamicRangeSentinelProcessor::acceptsMidi() const { return false; }
-bool DynamicRangeSentinelProcessor::producesMidi() const { return false; }
-double DynamicRangeSentinelProcessor::getTailLengthSeconds() const { return 0.0; }
-int DynamicRangeSentinelProcessor::getNumPrograms() { return 1; }
-int DynamicRangeSentinelProcessor::getCurrentProgram() { return 0; }
-void DynamicRangeSentinelProcessor::setCurrentProgram(int index) {}
-const juce::String DynamicRangeSentinelProcessor::getProgramName(int index) { return {}; }
-void DynamicRangeSentinelProcessor::changeProgramName(int index, const juce::String& newName) {}
 
 void DynamicRangeSentinelProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     lastSampleRate = sampleRate;
-    auto maxLookaheadSamples = static_cast<int>(std::ceil(sampleRate * 0.050));
-    lookaheadBuffer.setSize(getTotalNumInputChannels(), maxLookaheadSamples);
+    lookaheadBuffer.setSize(getTotalNumInputChannels(), static_cast<int>(sampleRate * 2.0));
     lookaheadBuffer.clear();
     writePosition = 0;
-    smoothedGain = 1.0f;
+
+    targetPeakParam = apvts.getRawParameterValue("TARGET_PEAK");
+    lookaheadParam = apvts.getRawParameterValue("LOOKAHEAD");
 }
 
-void DynamicRangeSentinelProcessor::releaseResources()
-{
-    lookaheadBuffer.setSize(0, 0);
-}
+void DynamicRangeSentinelProcessor::releaseResources() {}
 
-void DynamicRangeSentinelProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void DynamicRangeSentinelProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
+    auto totalNumInputChannels  = getTotalNumInputChannels();
     auto numSamples = buffer.getNumSamples();
-    auto targetPeak = targetPeakParam->load();
-    auto lookaheadTimeMs = lookaheadParam->load();
-    auto lookaheadSamples = static_cast<int>(lastSampleRate * lookaheadTimeMs / 1000.0);
-    if (lookaheadSamples >= lookaheadBuffer.getNumSamples())
-        lookaheadSamples = lookaheadBuffer.getNumSamples() - 1;
 
-    for (int i = 0; i < numSamples; ++i)
+    float targetPeak = *targetPeakParam;
+    float lookaheadTime = *lookaheadParam;
+
+    for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
-        for (int channel = 0; channel < totalNumInputChannels; ++channel)
+        float* channelData = buffer.getWritePointer(channel);
+        for (int sample = 0; sample < numSamples; ++sample)
         {
-            const float* inputData = buffer.getReadPointer(channel);
-            float* lookaheadData = lookaheadBuffer.getWritePointer(channel);
-            lookaheadData[writePosition] = inputData[i];
-        }
+            float inputSample = channelData[sample];
+            float gain = 1.0f;
 
-        float maxFuturePeak = 0.0f;
-        for (int j = 0; j < lookaheadSamples; ++j)
-        {
-            int futurePosition = (writePosition + j) % lookaheadBuffer.getNumSamples();
-            for (int channel = 0; channel < totalNumInputChannels; ++channel)
-            {
-                maxFuturePeak = std::max(maxFuturePeak, std::abs(lookaheadBuffer.getSample(channel, futurePosition)));
-            }
-        }
+            if (std::abs(inputSample) > targetPeak)
+                gain = targetPeak / std::abs(inputSample);
 
-        float targetGain = 1.0f;
-        if (maxFuturePeak > targetPeak)
-        {
-            targetGain = targetPeak / maxFuturePeak;
+            smoothedGain = 0.99f * smoothedGain + 0.01f * gain;
+            channelData[sample] *= smoothedGain;
         }
-
-        smoothedGain = smoothedGain * 0.99f + targetGain * 0.01f;
-
-        int readPosition = (writePosition - lookaheadSamples + lookaheadBuffer.getNumSamples()) % lookaheadBuffer.getNumSamples();
-        for (int channel = 0; channel < totalNumOutputChannels; ++channel)
-        {
-            float sampleToProcess = lookaheadBuffer.getSample(channel, readPosition);
-            float processedSample = sampleToProcess * smoothedGain;
-            float* outputData = buffer.getWritePointer(channel);
-            outputData[i] = processedSample;
-        }
-        writePosition = (writePosition + 1) % lookaheadBuffer.getNumSamples();
     }
 }
 
-juce::AudioProcessorEditor* DynamicRangeSentinelProcessor::createEditor()
-{
-#ifdef JUCE_BUILD_GUI
+juce::AudioProcessorEditor* DynamicRangeSentinelProcessor::createEditor() {
     return new DynamicRangeSentinelEditor(*this);
-#else
-    return nullptr;
-#endif
 }
 
-bool DynamicRangeSentinelProcessor::hasEditor() const
+bool DynamicRangeSentinelProcessor::hasEditor() const { return true; }
+const juce::String DynamicRangeSentinelProcessor::getName() const { return "DynamicRangeSentinel"; }
+bool DynamicRangeSentinelProcessor::acceptsMidi() const { return false; }
+bool DynamicRangeSentinelProcessor::producesMidi() const { return false; }
+double DynamicRangeSentinelProcessor::getTailLengthSeconds() const { return 0.0; }
+
+int DynamicRangeSentinelProcessor::getNumPrograms() { return 1; }
+int DynamicRangeSentinelProcessor::getCurrentProgram() { return 0; }
+void DynamicRangeSentinelProcessor::setCurrentProgram(int) {}
+const juce::String DynamicRangeSentinelProcessor::getProgramName(int) { return {}; }
+void DynamicRangeSentinelProcessor::changeProgramName(int, const juce::String&) {}
+
+void DynamicRangeSentinelProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
-#ifdef JUCE_BUILD_GUI
-    return true;
-#else
-    return false;
-#endif
+    if (auto state = apvts.copyState())
+        juce::MemoryOutputStream(destData, true).writeObject(state);
+}
+
+void DynamicRangeSentinelProcessor::setStateInformation(const void* data, int sizeInBytes)
+{
+    if (auto state = juce::ValueTree::readFromData(data, static_cast<size_t>(sizeInBytes)))
+        apvts.replaceState(state);
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout DynamicRangeSentinelProcessor::createParameterLayout()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("TARGET_PEAK", "Target Peak", 0.0f, 1.0f, 0.9f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("LOOKAHEAD", "Lookahead", 1.0f, 50.0f, 20.0f));
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("TARGET_PEAK", "Target Peak", 0.01f, 1.0f, 0.8f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("LOOKAHEAD", "Lookahead", 0.0f, 0.2f, 0.02f));
+
     return { params.begin(), params.end() };
-}
-
-void DynamicRangeSentinelProcessor::getStateInformation(juce::MemoryBlock& destData)
-{
-    auto state = apvts.copyState();
-    std::unique_ptr<juce::XmlElement> xml(state.createXml());
-    copyXmlToBinary(*xml, destData);
-}
-
-void DynamicRangeSentinelProcessor::setStateInformation(const void* data, int sizeInBytes)
-{
-    std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
-    if (xmlState.get() != nullptr)
-        if (xmlState->hasTagName(apvts.state.getType()))
-            apvts.replaceState(juce::ValueTree::fromXml(*xmlState));
-}
-
-juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
-{
-    return new DynamicRangeSentinelProcessor();
 }

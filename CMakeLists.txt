@@ -2,29 +2,19 @@ cmake_minimum_required(VERSION 3.15)
 
 project(DynamicRangeSentinel VERSION 1.0.0)
 
-set(CMAKE_CXX_STANDARD 17)
-
-# JUCE
+# JUCE wrapper
 include(FetchContent)
+
 FetchContent_Declare(
-  juce
-  GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-  GIT_TAG origin/master
+    juce
+    GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+    GIT_TAG        7.0.9
 )
+
 FetchContent_MakeAvailable(juce)
 
-# Ruta al VST2 SDK (ADAPTADA A TU REPO)
-set(VST2_SDK_PATH "${CMAKE_SOURCE_DIR}/vst2sdk/public.sdk/")
-
-if(NOT EXISTS "${VST2_SDK_PATH}/aeffect.h")
-    message(FATAL_ERROR "VST2 SDK no encontrado en: ${VST2_SDK_PATH}")
-endif()
-
-# Agregar headers de VST2 al path
-include_directories(${VST2_SDK_PATH})
-
-# JUCE Plugin Setup
-juce_enable_vst2()
+# Activar VST2 usando ruta personalizada
+set(JUCE_VST2SDK_LOCATION "${CMAKE_SOURCE_DIR}/vst2sdk/public.sdk")
 
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME "Patedefua"
@@ -34,20 +24,24 @@ juce_add_plugin(DynamicRangeSentinel
     IS_MIDI_EFFECT FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     COPY_PLUGIN_AFTER_BUILD TRUE
-
-    PLUGIN_MANUFACTURER_CODE PdFa
-    PLUGIN_CODE DrSe
+    PLUGIN_MANUFACTURER_CODE PdF0
+    PLUGIN_CODE Drs0
     FORMATS VST2
-    PRODUCT_NAME "DynamicRangeSentinel"
-
-    SOURCES
-        Source/PluginEditor.cpp
-        Source/PluginEditor.h
-        Source/PluginProcessor.cpp
-        Source/PluginProcessor.h
+    PRODUCT_NAME "Dynamic Range Sentinel"
 )
 
-# Binarios (recursos)
+target_sources(DynamicRangeSentinel
+    PRIVATE
+        Source/PluginEditor.cpp
+        Source/PluginProcessor.cpp
+)
+
+target_include_directories(DynamicRangeSentinel
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/Source
+)
+
+# Binary resources (imágenes, fuentes, etc.)
 juce_add_binary_data(BinaryData
     SOURCES
         Source/Resources/background.png
@@ -69,16 +63,17 @@ juce_add_binary_data(BinaryData
         Source/Resources/Sarpanch-Regular.ttf
 )
 
-target_link_libraries(DynamicRangeSentinel PRIVATE
-    juce::juce_audio_utils
-    juce::juce_audio_processors
-    juce::juce_audio_formats
-    juce::juce_core
-    juce::juce_data_structures
-    juce::juce_graphics
-    juce::juce_gui_basics
-    juce::juce_gui_extra
-    BinaryData
+target_link_libraries(DynamicRangeSentinel
+    PRIVATE
+        juce::juce_audio_processors
+        juce::juce_audio_utils
+        juce::juce_dsp
+        juce::juce_gui_basics
+        juce::juce_gui_extra
+        BinaryData
 )
 
-target_include_directories(DynamicRangeSentinel PRIVATE ${VST2_SDK_PATH})
+# Exportar como DLL (VST2)
+set_target_properties(DynamicRangeSentinel PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release"
+)

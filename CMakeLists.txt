@@ -40,38 +40,46 @@ juce_add_binary_data(BinaryData
         Source/Resources/Sarpanch-Regular.ttf
 )
 
-# Código base sin GUI
+# Código base (sin GUI)
 add_library(SharedCode STATIC
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
 )
-target_link_libraries(SharedCode PRIVATE BinaryData)
+target_link_libraries(SharedCode PRIVATE
+    BinaryData
+    juce::juce_audio_processors
+)
 
-# Código con GUI (solo si está habilitado)
+# Código GUI (solo si está habilitado)
 if(ENABLE_GUI)
     message(STATUS "✔ GUI habilitado: incluyendo PluginEditor.cpp/h")
     add_library(GuiCode STATIC
         Source/PluginEditor.cpp
         Source/PluginEditor.h
     )
-    target_link_libraries(GuiCode PRIVATE SharedCode juce::juce_gui_extra)
+    target_link_libraries(GuiCode PRIVATE
+        SharedCode
+        juce::juce_gui_extra
+    )
+else()
+    message(STATUS "🚫 GUI deshabilitado: PluginEditor y juce_gui_extra no se incluirán")
 endif()
 
-# Plugin (solo VST2 por ahora)
+# Plugin principal: solo VST2 por ahora
 juce_add_plugin(DynamicRangeSentinel
-    COMPANY_NAME          "OpusNexus"
-    FORMATS               VST2
-    BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
-    PLUGIN_VST2_CATEGORY  "Dynamics"
-    IS_SYNTH              FALSE
-    NEEDS_MIDI_INPUT      FALSE
-    NEEDS_MIDI_OUTPUT     FALSE
-    IS_MIDI_EFFECT        FALSE
+    COMPANY_NAME           "OpusNexus"
+    FORMATS                VST2
+    BUNDLE_ID              "com.opusnexus.DynamicRangeSentinel"
+    PLUGIN_VST2_CATEGORY   "Dynamics"
+    IS_SYNTH               FALSE
+    NEEDS_MIDI_INPUT       FALSE
+    NEEDS_MIDI_OUTPUT      FALSE
+    IS_MIDI_EFFECT         FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-    EDITOR_IS_SUPPORTED   ${ENABLE_GUI}
+    EDITOR_IS_SUPPORTED    ${ENABLE_GUI}
 )
 
-# Enlazar el plugin con los módulos adecuados
+# Enlazar al plugin según GUI activa o no
 if(TARGET DynamicRangeSentinel_VST2)
     if(ENABLE_GUI)
         target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE GuiCode)

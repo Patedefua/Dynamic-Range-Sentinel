@@ -30,7 +30,6 @@ jobs:
           libgl-dev libfreetype6-dev libgtk-3-dev
 
     - name: 3. Configurar CMake
-      shell: bash
       run: |
         SDK_PATH="vst2sdk"
         if [ "${{ matrix.os }}" == "macos-latest" ]; then
@@ -46,7 +45,6 @@ jobs:
 
     - name: 5. Preparar Paquete de Compatibilidad Total
       id: package
-      shell: bash
       run: |
         PLUGIN_NAME="DynamicRangeSentinel"
         PACKAGE_DIR="dist"

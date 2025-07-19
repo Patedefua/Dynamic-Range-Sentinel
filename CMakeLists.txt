@@ -9,14 +9,33 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
+# Configuración condicional: detectar si GUI está habilitado
+set(ENABLE_GUI ON)
+if(DEFINED JUCE_BUILD_GUI_CLASSES AND NOT JUCE_BUILD_GUI_CLASSES)
+    set(ENABLE_GUI OFF)
+endif()
+if(DEFINED JUCE_USE_GUI AND NOT JUCE_USE_GUI)
+    set(ENABLE_GUI OFF)
+endif()
+
+# Archivos compartidos, condicional al soporte GUI
 add_library(SharedCode INTERFACE)
 target_sources(SharedCode INTERFACE
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
-    Source/PluginEditor.cpp
-    Source/PluginEditor.h
 )
 
+if(ENABLE_GUI)
+    message(STATUS "✔ GUI habilitado: se incluye PluginEditor.cpp/h")
+    target_sources(SharedCode INTERFACE
+        Source/PluginEditor.cpp
+        Source/PluginEditor.h
+    )
+else()
+    message(STATUS "🚫 GUI deshabilitado: se excluye PluginEditor.*")
+endif()
+
+# Recursos gráficos (se compilan igual, aún sin GUI, porque pueden usarse en backends)
 juce_add_binary_data(BinaryData
     SOURCES
         Source/Resources/background.png
@@ -40,7 +59,7 @@ juce_add_binary_data(BinaryData
 
 target_link_libraries(SharedCode INTERFACE BinaryData)
 
-# ⚡ REDUCCIÓN ESTRATÉGICA: Construimos únicamente VST2.
+# 🔧 REDUCCIÓN ESTRATÉGICA: solo VST2
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME          "OpusNexus"
     FORMATS               VST2
@@ -48,7 +67,7 @@ juce_add_plugin(DynamicRangeSentinel
     PLUGIN_VST2_CATEGORY  "Dynamics"
 )
 
-# Enlace explícito y condicional para el único formato restante.
+# Enlace explícito del plugin a SharedCode
 if(TARGET DynamicRangeSentinel_VST2)
     target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE SharedCode)
 endif()

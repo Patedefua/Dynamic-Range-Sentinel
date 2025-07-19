@@ -1,50 +1,42 @@
 #pragma once
 
-#include <juce_audio_processors/juce_audio_processors.h>
+#include <JuceHeader.h>
 
-#if JUCE_BUILD_GUI
-#include "PluginEditor.h"
-#endif
-
-class DynamicRangeSentinelProcessor : public juce::AudioProcessor
+class DynamicRangeSentinelAudioProcessor  : public juce::AudioProcessor
 {
 public:
-    DynamicRangeSentinelProcessor();
-    ~DynamicRangeSentinelProcessor() override;
+    DynamicRangeSentinelAudioProcessor();
+    ~DynamicRangeSentinelAudioProcessor() override;
 
-    void prepareToPlay(double sampleRate, int samplesPerBlock) override;
+    void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
-    void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+
+    bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
+
+    void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override;
 
     const juce::String getName() const override;
+
     bool acceptsMidi() const override;
     bool producesMidi() const override;
+    bool isMidiEffect() const override;
     double getTailLengthSeconds() const override;
 
     int getNumPrograms() override;
     int getCurrentProgram() override;
-    void setCurrentProgram(int index) override;
-    const juce::String getProgramName(int index) override;
-    void changeProgramName(int index, const juce::String& newName) override;
+    void setCurrentProgram (int index) override;
+    const juce::String getProgramName (int index) override;
+    void changeProgramName (int index, const juce::String& newName) override;
 
-    void getStateInformation(juce::MemoryBlock& destData) override;
-    void setStateInformation(const void* data, int sizeInBytes) override;
-
-    juce::AudioProcessorValueTreeState apvts;
+    void getStateInformation (juce::MemoryBlock& destData) override;
+    void setStateInformation (const void* data, int sizeInBytes) override;
 
 private:
-    juce::AudioBuffer<float> lookaheadBuffer;
-    int writePosition = 0;
-    double lastSampleRate = 44100.0;
-    float smoothedGain = 1.0f;
+    juce::AudioParameterFloat* thresholdParam = nullptr;
+    juce::AudioParameterFloat* ceilingParam = nullptr;
 
-    std::atomic<float>* targetPeakParam = nullptr;
-    std::atomic<float>* lookaheadParam = nullptr;
-
-    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DynamicRangeSentinelProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DynamicRangeSentinelAudioProcessor)
 };

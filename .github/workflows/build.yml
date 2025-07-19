@@ -21,8 +21,8 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
-        # ⚡ RESTAURACIÓN: Re-añadido gobjc++, el compilador de Objective-C++, requerido por el núcleo de JUCE.
-        sudo apt-get install -y build-essential pkg-config gobjc++ libasound2-dev libjack-jackd2-dev
+        # ⚡ RESTAURACIÓN DE CIMIENTOS: Re-añadidas las librerías de X11, OpenGL y FreeType, requeridas por las herramientas de JUCE.
+        sudo apt-get install -y build-essential pkg-config gobjc++ libasound2-dev libjack-jackd2-dev libx11-dev libxinerama-dev libxrandr-dev libxcursor-dev libgl-dev libfreetype6-dev
 
     - name: 3. Configurar CMake
       shell: bash

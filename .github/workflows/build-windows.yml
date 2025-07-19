@@ -1,45 +1,45 @@
-name: Build VST2 Plugin for Windows
+name: build-windows
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build-windows:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-    - name: Setup MSVC
-      uses: ilammy/msvc-dev-cmd@v1
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
 
-    - name: Setup CMake
-      uses: jwlawson/actions-setup-cmake@v1
-      with:
-        cmake-version: '3.27.0'
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v1
+        with:
+          cmake-version: '3.27.0'
 
-    - name: Configure project
-      run: cmake -B Builds
+      - name: Configure project
+        run: cmake -B Builds -DCMAKE_CONFIGURATION_TYPES=Release
 
-    - name: Build project
-      run: cmake --build Builds --config Release
+      - name: Build plugin
+        run: cmake --build Builds --config Release
 
-    - name: Find and zip DLL
-      shell: pwsh
-      run: |
-        $dll = Get-ChildItem -Path Builds -Recurse -Filter DynamicRangeSentinel.dll | Select-Object -First 1
-        if ($dll -eq $null) {
-          Write-Error "❌ No DLLs were found!"
-          exit 1
-        }
-        Compress-Archive -Path $dll.FullName -DestinationPath DynamicRangeSentinel.zip
+      - name: Buscar y comprimir DLL
+        shell: pwsh
+        run: |
+          $dll = Get-ChildItem -Path Builds -Recurse -Filter "DynamicRangeSentinel.dll" | Select-Object -First 1
+          if (-not $dll) {
+            Write-Error "❌ No DLLs were found!"
+            exit 1
+          }
+          Compress-Archive -Path $dll.FullName -DestinationPath DynamicRangeSentinel.zip
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: DynamicRangeSentinel-VST2-Windows
-        path: DynamicRangeSentinel.zip
+      - name: Subir artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: DynamicRangeSentinel-VST2-Windows
+          path: DynamicRangeSentinel.zip

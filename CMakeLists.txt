@@ -70,7 +70,14 @@ juce_add_plugin(DynamicRangeSentinel
     FORMATS               VST2
     BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
     PLUGIN_VST2_CATEGORY  "Dynamics"
+    IS_SYNTH              FALSE
+    NEEDS_MIDI_INPUT      FALSE
+    NEEDS_MIDI_OUTPUT     FALSE
+    IS_MIDI_EFFECT        FALSE
+    EDITOR_WANTS_KEYBOARD_FOCUS FALSE
+    EDITOR_IS_SUPPORTED   ${ENABLE_GUI}
 )
+
 
 # Vincular bibliotecas según si hay GUI
 if(TARGET DynamicRangeSentinel_VST2)

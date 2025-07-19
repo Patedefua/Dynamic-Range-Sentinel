@@ -2,9 +2,11 @@ name: Build on Windows
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    paths:
+      - '**.cpp'
+      - '**.h'
+      - '**CMakeLists.txt'
+      - '.github/workflows/build-windows.yml'
 
 jobs:
   build-windows:
@@ -12,34 +14,32 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Setup MSVC
+      - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Setup CMake
+      - name: Set up CMake
         uses: jwlawson/actions-setup-cmake@v1
-        with:
-          cmake-version: '3.27.0'
 
       - name: Configure
-        run: cmake -B Builds
+        run: cmake -B Builds -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build Builds --config Release
 
-      - name: Archive VST2 DLL
+      - name: Find and Compress DLL
         shell: pwsh
         run: |
           $dlls = Get-ChildItem -Path Builds -Recurse -Filter *.dll
-          if ($dlls) {
-            Compress-Archive -Path $dlls.FullName -DestinationPath DynamicRangeSentinel.zip
-          } else {
+          if ($dlls.Count -eq 0) {
             Write-Error "❌ No DLLs were found!"
+          } else {
+            Compress-Archive -Path $dlls.FullName -DestinationPath DynamicRangeSentinel.zip
           }
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
-          name: DynamicRangeSentinel-VST2
+          name: DynamicRangeSentinel
           path: DynamicRangeSentinel.zip

@@ -14,7 +14,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(juce)
 
-# Ruta al SDK VST2 (IMPORTANTE: esta carpeta debe contener pluginterfaces/vst2.x/aeffect.h)
+# Ruta al SDK VST2
 set(VST2_SDK_PATH "${CMAKE_SOURCE_DIR}/vst2sdk/public.sdk/source/vst2.x")
 
 # Plugin
@@ -25,16 +25,13 @@ juce_add_plugin(DynamicRangeSentinel
   PLUGIN_CODE DRS1
   FORMATS VST2
   PRODUCT_NAME "Dynamic Range Sentinel"
+  COPY_PLUGIN_AFTER_BUILD TRUE
   PLUGIN_GUI TRUE
-)
-
-# Archivos fuente
-target_sources(DynamicRangeSentinel
-  PRIVATE
-    Source/PluginProcessor.cpp
-    Source/PluginProcessor.h
+  SOURCE_FILES
     Source/PluginEditor.cpp
     Source/PluginEditor.h
+    Source/PluginProcessor.cpp
+    Source/PluginProcessor.h
 )
 
 # Recursos gráficos y fuentes
@@ -59,20 +56,26 @@ juce_add_binary_data(BinaryData
     Source/Resources/Sarpanch-Regular.ttf
 )
 
-# Incluir rutas necesarias
-target_include_directories(DynamicRangeSentinel
-  PRIVATE
-    "${VST2_SDK_PATH}"
-)
+# Módulos y binarios
 
-# Linkeo
 target_link_libraries(DynamicRangeSentinel
   PRIVATE
+    juce::juce_audio_basics
+    juce::juce_audio_devices
+    juce::juce_audio_formats
+    juce::juce_audio_processors
     juce::juce_audio_utils
+    juce::juce_core
+    juce::juce_data_structures
+    juce::juce_events
+    juce::juce_graphics
+    juce::juce_gui_basics
+    juce::juce_gui_extra
     BinaryData
 )
 
-# Definiciones necesarias para VST2
+# Para permitir VST2
+
 target_compile_definitions(DynamicRangeSentinel
   PRIVATE
     JUCE_VST3_CAN_REPLACE_VST2=0
@@ -80,9 +83,19 @@ target_compile_definitions(DynamicRangeSentinel
     JucePlugin_Build_VST2=1
 )
 
-# Copia el DLL final al directorio Builds/Release después de compilar (Windows)
-add_custom_command(TARGET DynamicRangeSentinel POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "$<TARGET_FILE:DynamicRangeSentinel>"
-    "${CMAKE_BINARY_DIR}/Release/$<TARGET_FILE_NAME:DynamicRangeSentinel>"
+# Incluir ruta al VST2 SDK para JUCE y al source de JUCE
+
+target_include_directories(DynamicRangeSentinel
+  PRIVATE
+    "${JUCE_SOURCE_DIR}"
+    "${JUCE_SOURCE_DIR}/modules"
+    "${VST2_SDK_PATH}"
+)
+
+# Definiciones adicionales de JUCE
+
+target_compile_definitions(DynamicRangeSentinel
+  PRIVATE
+    JUCE_APPLICATION_NAME_STRING="$<TARGET_PROPERTY:DynamicRangeSentinel,JUCE_PRODUCT_NAME>"
+    JUCE_APPLICATION_VERSION_STRING="$<TARGET_PROPERTY:DynamicRangeSentinel,JUCE_VERSION>"
 )

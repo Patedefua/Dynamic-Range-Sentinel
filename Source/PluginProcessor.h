@@ -2,6 +2,10 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
+#if JUCE_BUILD_GUI
+#include "PluginEditor.h"
+#endif
+
 class DynamicRangeSentinelProcessor : public juce::AudioProcessor
 {
 public:

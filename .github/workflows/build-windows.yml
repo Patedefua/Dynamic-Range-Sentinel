@@ -35,8 +35,9 @@ jobs:
           if ($dlls.Count -eq 0) {
             Write-Error "❌ No DLLs were found!"
           } else {
-            echo "Found DLLs: $dlls"
-            echo "dlls=$dlls" >> $env:GITHUB_OUTPUT
+            Write-Output "Found DLLs: $dlls"
+            $dllsList = $dlls -join "`n"
+            "dlls=$dllsList" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           }
 
       - name: Upload DLL artifact

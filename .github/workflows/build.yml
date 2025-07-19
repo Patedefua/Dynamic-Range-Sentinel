@@ -37,8 +37,8 @@ jobs:
         else
           cmake . -B Builds -D VST2_SDK_PATH=$SDK_PATH
         fi
-- name: Install GTK dependencies
-  run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev
+   - name: Install GTK dependencies
+      run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev
 
     - name: 4. Construir el Plugin con CMake
       run: cmake --build Builds --config Release

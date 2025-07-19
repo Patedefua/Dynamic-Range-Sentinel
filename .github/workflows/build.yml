@@ -1,4 +1,4 @@
-name: Construir y Publicar Plugin
+name: Construir Plugin (Solo Windows)
 
 on:
   push:
@@ -8,53 +8,19 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: windows-latest
 
     steps:
     - name: 1. Clonar Repositorio
       uses: actions/checkout@v4
-      with:
-        # Usamos la inclusión directa del SDK, no submódulos
-        submodules: false
 
-    - name: 2. Instalar Dependencias (Linux)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential pkg-config gobjc++ libasound2-dev libjack-jackd2-dev libx11-dev libxinerama-dev libxrandr-dev libxcursor-dev libgl-dev libfreetype6-dev
+    - name: 2. Configurar CMake
+      run: cmake . -B Builds -D VST2_SDK_PATH="vst2sdk"
 
-    - name: 3. Configurar CMake
-      shell: bash
-      run: |
-        SDK_PATH="vst2sdk"
-        if [ "${{ matrix.os }}" == "macos-latest" ]; then
-          cmake . -B Builds -D VST2_SDK_PATH=$SDK_PATH -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
-        else
-          cmake . -B Builds -D VST2_SDK_PATH=$SDK_PATH
-        fi
-
-    - name: 4. Aplicar Parche en Caliente (macOS/Linux)
-      if: runner.os != 'Windows'
-      run: |
-        JUCE_FILE="Builds/_deps/juce-src/modules/juce_audio_plugin_client/juce_audio_plugin_client_VST3.cpp"
-        OLD_INCLUDE="#include \"pluginterfaces/vst2.x/vstfxstore.h\""
-        NEW_INCLUDE="#include \"../../../../vst2sdk/pluginterfaces/vst2.x/vstfxstore.h\""
-        
-        if [ "${{ matrix.os }}" == "macos-latest" ]; then
-          sed -i '' "s|${OLD_INCLUDE}|${NEW_INCLUDE}|g" ${JUCE_FILE}
-        else
-          sed -i "s|${OLD_INCLUDE}|${NEW_INCLUDE}|g" ${JUCE_FILE}
-        fi
-        
-        echo "Parche aplicado a ${JUCE_FILE}"
-
-    - name: 5. Construir el Plugin con CMake
+    - name: 3. Construir el Plugin con CMake
       run: cmake --build Builds --config Release
 
-    - name: 6. Preparar Paquete de Compatibilidad Total
+    - name: 4. Preparar Paquete de Artefactos
       id: package
       shell: bash
       run: |
@@ -62,33 +28,25 @@ jobs:
         PACKAGE_DIR="dist"
         mkdir -p $PACKAGE_DIR
 
+        # Encontrar y mover VST3
         VST3_PATH=$(find Builds -name "${PLUGIN_NAME}.vst3" -print -quit)
         if [ -n "$VST3_PATH" ]; then
           mv "$VST3_PATH" "$PACKAGE_DIR/"
         fi
         
-        if [ "${{ matrix.os }}" == "windows-latest" ]; then
-          VST2_PATH=$(find Builds -path "*Release/${PLUGIN_NAME}.dll" -print -quit)
-          if [ -n "$VST2_PATH" ]; then
-            mv "$VST2_PATH" "$PACKAGE_DIR/"
-          fi
-          ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Win.zip"
-        elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-          VST2_PATH=$(find Builds -path "*${PLUGIN_NAME}.so" -print -quit)
-          if [ -n "$VST2_PATH" ]; then
-            mv "$VST2_PATH" "$PACKAGE_DIR/"
-          fi
-          ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Linux.zip"
-        elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-          VST2_PATH=$(find Builds -name "${PLUGIN_NAME}.vst" -type d -print -quit)
-          if [ -n "$VST2_PATH" ]; then
-            mv "$VST2_PATH" "$PACKAGE_DIR/"
-          fi
-          ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Mac-Universal.zip"
+        # Encontrar y mover VST2
+        VST2_PATH=$(find Builds -path "*Release/${PLUGIN_NAME}.dll" -print -quit)
+        if [ -n "$VST2_PATH" ]; then
+          mv "$VST2_PATH" "$PACKAGE_DIR/"
         fi
         
+        # Comprimir los artefactos encontrados
+        ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Win.zip"
         cd $PACKAGE_DIR && zip -r ../$ZIP_NAME . && cd ..
         echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
 
-    - name: 7. Subir el Artefacto Comprimido
-      uses: actions/upload-artifact@
+    - name: 5. Subir el Artefacto Comprimido
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.package.outputs.zip_name }}
+        path: ${{ steps.package.outputs.zip_name }}

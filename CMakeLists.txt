@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.22)
 project(DynamicRangeSentinel VERSION 1.0.1 LANGUAGES CXX C OBJCXX)
 
-# Usamos FetchContent para obtener y preparar JUCE automáticamente.
+# Usamos FetchContent para obtener JUCE, anclado a una versión estable para builds reproducibles.
 include(FetchContent)
 FetchContent_Declare(
     JUCE
     GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-    GIT_TAG        master
+    # ⚡ MODIFICACIÓN CRÍTICA: Anclado a una versión estable en lugar de 'master'.
+    GIT_TAG        7.0.10
 )
 FetchContent_MakeAvailable(JUCE)
 
@@ -24,7 +25,7 @@ juce_add_plugin(DynamicRangeSentinel
 )
 
 # Añadimos todos los recursos gráficos y tipográficos como datos binarios.
-# --- LISTA COMPLETA Y VERIFICADA DE LOS 17 ARCHIVOS ---
+# Lista de 17 archivos verificada y sin cambios.
 juce_add_binary_data(BinaryData
     TARGET DynamicRangeSentinel
     SOURCES

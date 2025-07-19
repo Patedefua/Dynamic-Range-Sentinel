@@ -1,108 +1,77 @@
 cmake_minimum_required(VERSION 3.22)
+project(DynamicRangeSentinel VERSION 1.0.1 LANGUAGES CXX)
 
-# Detect platform and set OBJCXX only for macOS
-if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    project(DynamicRangeSentinel VERSION 1.0.1 LANGUAGES CXX C OBJCXX)
+include(FetchContent)
+
+# --- JUCE Framework fetch ---
+FetchContent_Declare(
+    JUCE
+    GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+    GIT_TAG        7.0.10
+)
+FetchContent_MakeAvailable(JUCE)
+
+# --- Platform flags ---
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(BUILD_WITH_GUI OFF)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(BUILD_WITH_GUI ON)
 else()
-    project(DynamicRangeSentinel VERSION 1.0.1 LANGUAGES CXX C)
+    message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
 endif()
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# --- Shared plugin source code ---
+add_library(SharedCode STATIC)
+target_sources(SharedCode PRIVATE
+    Source/PluginProcessor.cpp
+    Source/PluginProcessor.h
+)
 
-# Set plugin details using escaped quotes
+if(BUILD_WITH_GUI)
+    target_sources(SharedCode PRIVATE
+        Source/PluginEditor.cpp
+        Source/PluginEditor.h
+    )
+
+    juce_add_binary_data(BinaryData
+        SOURCES
+            Source/Resources/background.png
+            Source/Resources/circular_grille.png
+            Source/Resources/gain_reduction_frame.png
+            Source/Resources/gain_reduction_led.png
+            Source/Resources/hires_logo.png
+            Source/Resources/knob.png
+            Source/Resources/logo_plate.png
+            Source/Resources/quality_selector_knob.png
+            Source/Resources/slider_handle.png
+            Source/Resources/slider_track.png
+            Source/Resources/switch_off.png
+            Source/Resources/switch_on.png
+            Source/Resources/vu_meter_background.png
+            Source/Resources/vu_meter_background_peak.png
+            Source/Resources/vu_meter_needle.png
+            Source/Resources/waveform_graphic.png
+            Source/Resources/Sarpanch-Regular.ttf
+    )
+
+    target_link_libraries(SharedCode PRIVATE BinaryData)
+endif()
+
+# --- Plugin Target ---
+juce_add_plugin(DynamicRangeSentinel
+    COMPANY_NAME "OpusNexus"
+    PLUGIN_MANUFACTURER_CODE OpNx
+    PLUGIN_CODE DRS1
+    FORMATS VST2
+    PRODUCT_NAME "DynamicRangeSentinel"
+    BUNDLE_ID com.opusnexus.DynamicRangeSentinel
+    VST2_CATEGORY Dynamics
+)
+
+target_link_libraries(DynamicRangeSentinel PRIVATE SharedCode juce::juce_audio_utils)
+
+# --- Plugin definitions to avoid macro errors ---
 add_compile_definitions(
     JucePlugin_Manufacturer="\"Patedefua\""
     JucePlugin_Name="\"DynamicRangeSentinel\""
 )
-
-# JUCE setup
-add_subdirectory(JUCE)
-
-# Include source files
-file(GLOB_RECURSE SOURCE_FILES
-    Source/*.cpp
-    Source/*.h
-)
-
-# BinaryData setup (images, resources)
-juce_add_binary_data(BinaryData SOURCES Assets/background.png)
-
-# Create shared code library
-add_library(SharedCode STATIC ${SOURCE_FILES})
-target_link_libraries(SharedCode
-    PRIVATE
-        juce::juce_audio_utils
-        juce::juce_audio_processors
-        juce::juce_dsp
-        BinaryData
-)
-
-# Platform-specific plugin targets
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    # Plugin with GUI
-    juce_add_plugin(DynamicRangeSentinel
-        COMPANY_NAME "Patedefua"
-        IS_SYNTH FALSE
-        NEEDS_MIDI_INPUT FALSE
-        NEEDS_MIDI_OUTPUT FALSE
-        IS_MIDI_EFFECT FALSE
-        EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-        COPY_PLUGIN_AFTER_BUILD TRUE
-        PLUGIN_MANUFACTURER_CODE PdFu
-        PLUGIN_CODE Drs1
-        FORMATS VST3 AU
-        PRODUCT_NAME "DynamicRangeSentinel"
-    )
-    target_link_libraries(DynamicRangeSentinel
-        PRIVATE SharedCode
-    )
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    # Headless Linux build: no GUI, no plugin wrapper
-    add_executable(DynamicRangeSentinelCLI Source/PluginProcessor.cpp)
-    target_link_libraries(DynamicRangeSentinelCLI
-        PRIVATE SharedCode
-    )
-endif()
-
-# Recursos embebidos
-juce_add_binary_data(BinaryData
-    SOURCES
-        Source/Resources/background.png
-        Source/Resources/circular_grille.png
-        Source/Resources/gain_reduction_frame.png
-        Source/Resources/gain_reduction_led.png
-        Source/Resources/hires_logo.png
-        Source/Resources/knob.png
-        Source/Resources/logo_plate.png
-        Source/Resources/quality_selector_knob.png
-        Source/Resources/slider_handle.png
-        Source/Resources/slider_track.png
-        Source/Resources/switch_off.png
-        Source/Resources/switch_on.png
-        Source/Resources/vu_meter_background.png
-        Source/Resources/vu_meter_background_peak.png
-        Source/Resources/vu_meter_needle.png
-        Source/Resources/waveform_graphic.png
-        Source/Resources/Sarpanch-Regular.ttf
-)
-
-target_link_libraries(SharedCode INTERFACE BinaryData)
-
-# Crear plugin VST2 exclusivamente
-juce_add_plugin(DynamicRangeSentinel
-    COMPANY_NAME          "OpusNexus"
-    FORMATS               VST2
-    BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
-    PLUGIN_VST2_CATEGORY  "Dynamics"
-    NEEDS_MIDI_INPUT      False
-    PRODUCES_MIDI_OUTPUT  False
-    IS_SYNTH              False
-    EDITOR_WANTS_KEYBOARD_FOCUS False
-    COPY_PLUGIN_AFTER_BUILD TRUE
-)
-
-# Enlazar biblioteca compartida con el plugin
-if(TARGET DynamicRangeSentinel_VST2)
-    target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE SharedCode)
-endif()

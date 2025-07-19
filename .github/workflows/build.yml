@@ -14,31 +14,40 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
-    - name: 1. Clonar Repositorio
+    - name: 1. Clonar Repositorio Principal
       uses: actions/checkout@v4
+      with:
+        path: main
 
-    - name: 2. Instalar Dependencias (Linux)
-      if: matrix.os == 'ubuntu-latest'
+    - name: 2. Clonar VST2 SDK
+      uses: actions/checkout@v4
+      with:
+        repository: 'public-SDKs/vst2-sdk'
+        path: vst2sdk
+
+    - name: 3. Instalar Dependencias (Linux)
+      working-directory: main
       run: |
         sudo apt-get update
-        # ⚡ RESTAURACIÓN DE CIMIENTOS: Re-añadidas las librerías de X11, OpenGL y FreeType, requeridas por las herramientas de JUCE.
         sudo apt-get install -y build-essential pkg-config gobjc++ libasound2-dev libjack-jackd2-dev libx11-dev libxinerama-dev libxrandr-dev libxcursor-dev libgl-dev libfreetype6-dev
 
-    - name: 3. Configurar CMake
+    - name: 4. Configurar CMake
+      working-directory: main
       shell: bash
       run: |
+        SDK_PATH="../vst2sdk"
         if [ "${{ matrix.os }}" == "macos-latest" ]; then
-          cmake . -B Builds -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
-        elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-          cmake . -B Builds -D JUCE_HEADLESS_PLUGIN_CLIENT=1
+          cmake . -B Builds -D VST2_SDK_PATH=$SDK_PATH -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
         else
-          cmake . -B Builds
+          cmake . -B Builds -D VST2_SDK_PATH=$SDK_PATH
         fi
 
-    - name: 4. Construir el Plugin con CMake
+    - name: 5. Construir el Plugin con CMake
+      working-directory: main
       run: cmake --build Builds --config Release
 
-    - name: 5. Preparar Paquete Antifrágil
+    - name: 6. Preparar Paquete de Compatibilidad Total
+      working-directory: main
       id: package
       shell: bash
       run: |
@@ -46,24 +55,40 @@ jobs:
         PACKAGE_DIR="dist"
         mkdir -p $PACKAGE_DIR
 
+        # Encuentra y mueve VST3
+        VST3_PATH=$(find Builds -name "${PLUGIN_NAME}.vst3" -print -quit)
+        if [ -n "$VST3_PATH" ]; then
+          mv "$VST3_PATH" "$PACKAGE_DIR/"
+        fi
+        
         if [ "${{ matrix.os }}" == "windows-latest" ]; then
-          PLUGIN_PATH=$(find Builds -name "${PLUGIN_NAME}.vst3" -print -quit)
-          mv "$PLUGIN_PATH" "$PACKAGE_DIR/"
-          ZIP_NAME="${PLUGIN_NAME}-VST3-Win.zip"
+          # Encuentra y mueve VST2 (.dll)
+          VST2_PATH=$(find Builds -name "${PLUGIN_NAME}.dll" -print -quit)
+          if [ -n "$VST2_PATH" ]; then
+            mv "$VST2_PATH" "$PACKAGE_DIR/"
+          fi
+          ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Win.zip"
         elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-          PLUGIN_PATH=$(find Builds -name "${PLUGIN_NAME}.vst3" -print -quit)
-          mv "$PLUGIN_PATH" "$PACKAGE_DIR/"
-          ZIP_NAME="${PLUGIN_NAME}-VST3-Linux-Headless.zip"
+          # Encuentra y mueve VST2 (.so)
+          VST2_PATH=$(find Builds -name "${PLUGIN_NAME}.so" -print -quit)
+          if [ -n "$VST2_PATH" ]; then
+            mv "$VST2_PATH" "$PACKAGE_DIR/"
+          fi
+          ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Linux.zip"
         elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-          PLUGIN_PATH=$(find Builds -name "${PLUGIN_NAME}.component" -type d -print -quit)
-          mv "$PLUGIN_PATH" "$PACKAGE_DIR/"
-          ZIP_NAME="${PLUGIN_NAME}-AU-Mac-Universal.zip"
+          # Encuentra y mueve VST2 (.vst)
+          VST2_PATH=$(find Builds -name "${PLUGIN_NAME}.vst" -type d -print -quit)
+          if [ -n "$VST2_PATH" ]; then
+            mv "$VST2_PATH" "$PACKAGE_DIR/"
+          fi
+          ZIP__NAME="${PLUGIN_NAME}-VST-Bundle-Mac-Universal.zip"
         fi
         
         cd $PACKAGE_DIR && zip -r ../$ZIP_NAME . && cd ..
         echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
 
-    - name: 6. Subir el Artefacto Comprimido
+    - name: 7. Subir el Artefacto Comprimido
+      working-directory: main
       uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.package.outputs.zip_name }}

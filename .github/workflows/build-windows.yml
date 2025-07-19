@@ -1,0 +1,34 @@
+name: Build VST2 Plugin for Windows
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-windows:
+    name: Build on Windows
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up CMake
+      uses: jwlawson/actions-setup-cmake@v1
+      with:
+        cmake-version: '3.27.7'
+
+    - name: Configure CMake (Release)
+      run: cmake -B Builds -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build plugin
+      run: cmake --build Builds --config Release
+
+    - name: Upload built DLL as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: DynamicRangeSentinel-VST2-Windows
+        path: |
+          Builds/Release/*.dll

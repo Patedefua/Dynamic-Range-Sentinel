@@ -23,13 +23,19 @@ jobs:
           cmake-version: '3.27.0'
 
       - name: Configure
-        run: cmake -B Builds -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B Builds
 
       - name: Build
         run: cmake --build Builds --config Release
+
+      - name: Show build output tree (debug)
+        run: |
+          Get-ChildItem -Path Builds -Recurse | Out-String | Write-Output
 
       - name: Upload Plugin
         uses: actions/upload-artifact@v4
         with:
           name: DynamicRangeSentinel-VST2-Windows
-          path: Builds/Release/DynamicRangeSentinel.dll
+          path: |
+            Builds/**/*.dll
+            Builds/**/*.vst

@@ -30,22 +30,27 @@ jobs:
 
       - name: List output DLLs
         run: |
-          Get-ChildItem -Path Builds -Recurse -Filter *.dll | Select-Object -ExpandProperty FullName
+          Get-ChildItem -Path Builds -Recurse -Filter *.dll | ForEach-Object { Write-Output "FOUND: $($_.FullName)" }
 
       - name: Upload Plugin DLL
         uses: actions/upload-artifact@v4
         with:
           name: DynamicRangeSentinel-VST2-Windows
           path: |
-            Builds/**/Release/*.dll
+            Builds/**/*.dll
 
-      # OPCIONAL: empaquetar como zip también
-      - name: Zip Plugin
+      - name: Zip Plugin (if exists)
+        shell: pwsh
         run: |
           $dlls = Get-ChildItem -Path Builds -Recurse -Filter *.dll
-          Compress-Archive -Path $dlls.FullName -DestinationPath DynamicRangeSentinel.zip
+          if ($dlls.Count -gt 0) {
+            Compress-Archive -Path $dlls.FullName -DestinationPath DynamicRangeSentinel.zip
+          } else {
+            Write-Host "❌ No DLLs found to zip. Skipping."
+          }
 
-      - name: Upload ZIP
+      - name: Upload ZIP (if created)
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: DynamicRangeSentinel-ZIP

@@ -14,7 +14,7 @@ Suavizado de Ganancia: Transiciones de ganancia suaves para evitar cualquier "cl
 
 Búfer Configurable: Ajuste del búfer de "look-ahead" de 1ms a 50ms para un control total sobre la latencia y la precisión.
 
-Requisitos del Sistema Plataformas: Windows 10/11 (64-bit), Distribuciones de Linux (64-bit, ej. Ubuntu, Arch).
+Requisitos del Sistema Plataformas: Windows 10/11 (64-bit)
 
 Anfitrión (Host): Cualquier aplicación que soporte plugins VST2. Optimizado para:
 
@@ -38,7 +38,7 @@ Gain Smoothing: Smooth gain transitions to prevent any audible clicks or artifac
 
 Configurable Buffer: Adjust the look-ahead buffer from 1ms to 50ms for total control over latency and precision.
 
-System Requirements Platforms: Windows 10/11 (64-bit), Linux Distributions (64-bit, e.g., Ubuntu, Arch).
+System Requirements Platforms: Windows 10/11 (64-bit)
 
 Host: Any application that supports VST2 plugins. Optimized for:
 

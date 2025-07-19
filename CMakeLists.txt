@@ -47,6 +47,5 @@ juce_add_plugin(DynamicRangeSentinel
     PLUGIN_VST2_CATEGORY  "Dynamics"
 )
 
-# Enlace explícito y final para ambos formatos
 target_link_libraries(DynamicRangeSentinel_VST3 PRIVATE SharedCode)
 target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE SharedCode)

@@ -14,7 +14,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(juce)
 
-# Ruta al SDK VST2
+# Ruta al SDK VST2 (IMPORTANTE: esta carpeta debe contener pluginterfaces/vst2.x/aeffect.h)
 set(VST2_SDK_PATH "${CMAKE_SOURCE_DIR}/vst2sdk/public.sdk/source/vst2.x")
 
 # Plugin
@@ -25,13 +25,16 @@ juce_add_plugin(DynamicRangeSentinel
   PLUGIN_CODE DRS1
   FORMATS VST2
   PRODUCT_NAME "Dynamic Range Sentinel"
-  COPY_PLUGIN_AFTER_BUILD TRUE
   PLUGIN_GUI TRUE
-  SOURCE_FILES
-    Source/PluginEditor.cpp
-    Source/PluginEditor.h
+)
+
+# Archivos fuente
+target_sources(DynamicRangeSentinel
+  PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
+    Source/PluginEditor.cpp
+    Source/PluginEditor.h
 )
 
 # Recursos gráficos y fuentes
@@ -56,13 +59,20 @@ juce_add_binary_data(BinaryData
     Source/Resources/Sarpanch-Regular.ttf
 )
 
+# Incluir rutas necesarias
+target_include_directories(DynamicRangeSentinel
+  PRIVATE
+    "${VST2_SDK_PATH}"
+)
+
+# Linkeo
 target_link_libraries(DynamicRangeSentinel
   PRIVATE
     juce::juce_audio_utils
     BinaryData
 )
 
-# Para permitir VST2
+# Definiciones necesarias para VST2
 target_compile_definitions(DynamicRangeSentinel
   PRIVATE
     JUCE_VST3_CAN_REPLACE_VST2=0
@@ -70,7 +80,9 @@ target_compile_definitions(DynamicRangeSentinel
     JucePlugin_Build_VST2=1
 )
 
-# Incluir ruta al VST2 SDK para JUCE
-target_include_directories(DynamicRangeSentinel
-  PRIVATE "${VST2_SDK_PATH}"
+# Copia el DLL final al directorio Builds/Release después de compilar (Windows)
+add_custom_command(TARGET DynamicRangeSentinel POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "$<TARGET_FILE:DynamicRangeSentinel>"
+    "${CMAKE_BINARY_DIR}/Release/$<TARGET_FILE_NAME:DynamicRangeSentinel>"
 )

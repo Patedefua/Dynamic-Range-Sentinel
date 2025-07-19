@@ -75,6 +75,15 @@ target_include_directories(DynamicRangeSentinel
   PRIVATE "${VST2_SDK_PATH}"
 )
 
+# Configurar salida del plugin (.dll) para Windows
+if (WIN32)
+  set_target_properties(DynamicRangeSentinel PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release"
+    OUTPUT_NAME "DynamicRangeSentinel"
+    SUFFIX ".dll"
+  )
+endif()
+
 # Fuerza la salida del plugin como .dll y en la carpeta esperada
 set_target_properties(DynamicRangeSentinel PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release"

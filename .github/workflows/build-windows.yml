@@ -1,31 +1,48 @@
-# JUCE Config
-juce_add_plugin(DynamicRangeSentinel
-    COMPANY_NAME "Patedefua"
-    IS_SYNTH FALSE
-    NEEDS_MIDI_INPUT FALSE
-    NEEDS_MIDI_OUTPUT FALSE
-    IS_MIDI_EFFECT FALSE
-    EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-    COPY_PLUGIN_AFTER_BUILD TRUE
-    PLUGIN_MANUFACTURER_CODE Juce
-    PLUGIN_CODE Drs1
-    FORMATS VST2
-    PRODUCT_NAME "DynamicRangeSentinel"
-)
+name: Build on Windows
 
-# Activar VST2 y definir ruta
-set(JUCE_VST2SDK_LOCATION "${CMAKE_SOURCE_DIR}/vst2sdk/public.sdk")
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 
-target_sources(DynamicRangeSentinel PRIVATE
-    Source/PluginProcessor.cpp
-    Source/PluginEditor.cpp
-)
+jobs:
+  build-windows:
+    runs-on: windows-latest
 
-target_compile_definitions(DynamicRangeSentinel PRIVATE
-    JUCE_VST2_CAN_REPLACE_VST3=0
-)
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-target_link_libraries(DynamicRangeSentinel PRIVATE
-    juce::juce_audio_processors
-    juce::juce_gui_extra
-)
+    - name: Set up CMake
+      uses: jwlawson/actions-setup-cmake@v1
+      with:
+        cmake-version: "3.27.0"
+
+    - name: Install dependencies
+      uses: ilammy/msvc-dev-cmd@v1
+
+    - name: Configure CMake
+      run: cmake -B Builds -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build plugin
+      run: cmake --build Builds --config Release
+
+    - name: Find built VST2 plugin
+      id: get-dll-path
+      shell: pwsh
+      run: |
+        $dll = Get-ChildItem -Recurse -Filter "*.dll" -Path "Builds/Release" | Select-Object -First 1
+        if (-not $dll) {
+          Write-Error "No DLL found in Builds/Release"
+        }
+        echo "DLL path: $($dll.FullName)"
+        echo "dll_path=$($dll.FullName)" >> $env:GITHUB_OUTPUT
+
+    - name: Upload VST2 DLL artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: DynamicRangeSentinel-VST2-Windows
+        path: ${{ steps.get-dll-path.outputs.dll_path }}
+        if-no-files-found: error

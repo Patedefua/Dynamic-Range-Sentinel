@@ -3,20 +3,38 @@ cmake_minimum_required(VERSION 3.15)
 project(DynamicRangeSentinel VERSION 1.0.0)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# JUCE path (ajustar si es submódulo o carpeta externa)
-set(JUCE_DIR "${CMAKE_SOURCE_DIR}/JUCE")
+# JUCE vía FetchContent
+include(FetchContent)
+FetchContent_Declare(
+  juce
+  GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+  GIT_TAG master
+)
+FetchContent_MakeAvailable(juce)
 
-# Plugin format
-set(BUILD_VST2 TRUE)
+# Ruta al SDK VST2
+set(VST2_SDK_PATH "${CMAKE_SOURCE_DIR}/vst2sdk/public.sdk/source/vst2.x")
 
-# Ruta VST2 SDK
-set(VST2_SDK_PATH "${CMAKE_SOURCE_DIR}/vst2sdk")
+# Agregar plugin
+juce_add_plugin(DynamicRangeSentinel
+  COMPANY_NAME "Patedefua"
+  PLUGIN_NAME "Dynamic Range Sentinel"
+  PLUGIN_MANUFACTURER_CODE PdFa
+  PLUGIN_CODE DRS1
+  FORMATS VST2
+  PRODUCT_NAME "Dynamic Range Sentinel"
+  COPY_PLUGIN_AFTER_BUILD TRUE
+  PLUGIN_GUI TRUE
+  SOURCE_FILES
+    Source/PluginProcessor.cpp
+    Source/PluginProcessor.h
+    Source/PluginEditor.cpp
+    Source/PluginEditor.h
+)
 
-# Agregar JUCE
-add_subdirectory(${JUCE_DIR} JUCE)
-
-# Agregar binarios/recursos
+# Recursos binarios
 juce_add_binary_data(BinaryData
   SOURCES
     Source/Resources/background.png
@@ -38,53 +56,21 @@ juce_add_binary_data(BinaryData
     Source/Resources/Sarpanch-Regular.ttf
 )
 
-# Agregar plugin
-juce_add_plugin(DynamicRangeSentinel
-    COMPANY_NAME "Patedefua"
-    IS_SYNTH FALSE
-    NEEDS_MIDI_INPUT FALSE
-    NEEDS_MIDI_OUTPUT FALSE
-    IS_MIDI_EFFECT FALSE
-    EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-    COPY_PLUGIN_AFTER_BUILD TRUE
-
-    PLUGIN_MANUFACTURER_CODE PdF0
-    PLUGIN_CODE DRS0
-    FORMATS VST2
-    PRODUCT_NAME "DynamicRangeSentinel"
-)
-
-# Archivos fuente
-target_sources(DynamicRangeSentinel PRIVATE
-    Source/PluginProcessor.cpp
-    Source/PluginProcessor.h
-    Source/PluginEditor.cpp
-    Source/PluginEditor.h
-)
-
-# Includes para VST2 SDK
-target_include_directories(DynamicRangeSentinel PRIVATE
-    "${VST2_SDK_PATH}"
-)
-
-# Definiciones para VST2
-target_compile_definitions(DynamicRangeSentinel PRIVATE
-    JUCE_VST2_HEADERS_INCLUDED=1
-)
-
-# Vinculación con JUCE y recursos binarios
-target_link_libraries(DynamicRangeSentinel PRIVATE
-    BinaryData
+target_link_libraries(DynamicRangeSentinel
+  PRIVATE
     juce::juce_audio_utils
-    juce::juce_audio_processors
-    juce::juce_audio_basics
-    juce::juce_core
-    juce::juce_data_structures
-    juce::juce_events
-    juce::juce_graphics
-    juce::juce_gui_basics
-    juce::juce_gui_extra
-    juce::juce_audio_devices
-    juce::juce_audio_formats
-    juce::juce_dsp
+    BinaryData
+)
+
+# Definiciones para habilitar VST2
+target_compile_definitions(DynamicRangeSentinel
+  PRIVATE
+    JUCE_VST3_CAN_REPLACE_VST2=0
+    JucePlugin_Build_VST=1
+    JucePlugin_Build_VST2=1
+)
+
+# Incluir encabezados del SDK VST2
+target_include_directories(DynamicRangeSentinel
+  PRIVATE "${VST2_SDK_PATH}"
 )

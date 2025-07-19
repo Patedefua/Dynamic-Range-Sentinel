@@ -9,7 +9,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
-# Detectar si GUI debe estar habilitado
+# Detectar si GUI está habilitado
 set(ENABLE_GUI ON)
 if(DEFINED JUCE_BUILD_GUI_CLASSES AND NOT JUCE_BUILD_GUI_CLASSES)
     set(ENABLE_GUI OFF)
@@ -18,15 +18,7 @@ if(DEFINED JUCE_USE_GUI AND NOT JUCE_USE_GUI)
     set(ENABLE_GUI OFF)
 endif()
 
-# Código base (sin GUI)
-add_library(SharedCode INTERFACE)
-target_sources(SharedCode INTERFACE
-    Source/PluginProcessor.cpp
-    Source/PluginProcessor.h
-)
-target_link_libraries(SharedCode INTERFACE BinaryData)
-
-# Agregar recursos gráficos (aunque no se use GUI)
+# Recursos gráficos (se compilan aunque no haya GUI)
 juce_add_binary_data(BinaryData
     SOURCES
         Source/Resources/background.png
@@ -48,23 +40,24 @@ juce_add_binary_data(BinaryData
         Source/Resources/Sarpanch-Regular.ttf
 )
 
-# Código gráfico separado
+# Código base sin GUI
+add_library(SharedCode STATIC
+    Source/PluginProcessor.cpp
+    Source/PluginProcessor.h
+)
+target_link_libraries(SharedCode PRIVATE BinaryData)
+
+# Código con GUI (solo si está habilitado)
 if(ENABLE_GUI)
-    add_library(GuiCode INTERFACE)
-    target_sources(GuiCode INTERFACE
+    message(STATUS "✔ GUI habilitado: incluyendo PluginEditor.cpp/h")
+    add_library(GuiCode STATIC
         Source/PluginEditor.cpp
         Source/PluginEditor.h
     )
-    target_link_libraries(GuiCode INTERFACE
-        juce::juce_gui_extra
-        SharedCode
-    )
-    message(STATUS "✔ GUI habilitado: PluginEditor y juce_gui_extra incluidos")
-else()
-    message(STATUS "🚫 GUI deshabilitado: no se incluye PluginEditor ni juce_gui_extra")
+    target_link_libraries(GuiCode PRIVATE SharedCode juce::juce_gui_extra)
 endif()
 
-# Definimos el plugin (solo VST2)
+# Plugin (solo VST2 por ahora)
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME          "OpusNexus"
     FORMATS               VST2
@@ -78,8 +71,7 @@ juce_add_plugin(DynamicRangeSentinel
     EDITOR_IS_SUPPORTED   ${ENABLE_GUI}
 )
 
-
-# Vincular bibliotecas según si hay GUI
+# Enlazar el plugin con los módulos adecuados
 if(TARGET DynamicRangeSentinel_VST2)
     if(ENABLE_GUI)
         target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE GuiCode)

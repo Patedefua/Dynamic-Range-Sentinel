@@ -29,11 +29,24 @@ jobs:
         run: cmake --build Builds --config Release
 
       - name: List output DLLs
-        run: dir Builds /s /b | findstr ".dll"
+        run: |
+          Get-ChildItem -Path Builds -Recurse -Filter *.dll | Select-Object -ExpandProperty FullName
 
-      - name: Upload Plugin
+      - name: Upload Plugin DLL
         uses: actions/upload-artifact@v4
         with:
           name: DynamicRangeSentinel-VST2-Windows
           path: |
             Builds/**/Release/*.dll
+
+      # OPCIONAL: empaquetar como zip también
+      - name: Zip Plugin
+        run: |
+          $dlls = Get-ChildItem -Path Builds -Recurse -Filter *.dll
+          Compress-Archive -Path $dlls.FullName -DestinationPath DynamicRangeSentinel.zip
+
+      - name: Upload ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: DynamicRangeSentinel-ZIP
+          path: DynamicRangeSentinel.zip

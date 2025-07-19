@@ -21,8 +21,8 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
-        # ⚡ ADAPTACIÓN: Corregido el nombre del paquete a la versión actual de Ubuntu (24.04).
-        sudo apt-get install -y build-essential pkg-config gobjc++ libasound2-dev libjack-jackd2-dev libx11-dev libxinerama-dev libxrandr-dev libxcursor-dev libwebkitgtk-6.0-dev libgtk-3-dev libgl-dev libfreetype6-dev
+        # ⚡ MODERNIZACIÓN: Actualizamos a GTK4, el estándar requerido por el ecosistema actual.
+        sudo apt-get install -y build-essential pkg-config gobjc++ libasound2-dev libjack-jackd2-dev libx11-dev libxinerama-dev libxrandr-dev libxcursor-dev libwebkitgtk-6.0-dev libgtk-4-dev libgl-dev libfreetype6-dev
 
     - name: 3. Configurar CMake
       shell: bash

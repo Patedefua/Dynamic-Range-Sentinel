@@ -9,8 +9,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
-# ⚡ PARADIGMA 1: AISLAR NUESTRO CÓDIGO
-# Creamos una biblioteca "INTERFACE" (sin compilación propia) solo para agrupar nuestros archivos fuente.
+# PASO 1: Aislar nuestro código fuente en una biblioteca INTERFACE.
 add_library(SharedCode INTERFACE)
 target_sources(SharedCode INTERFACE
     Source/PluginProcessor.cpp
@@ -19,11 +18,9 @@ target_sources(SharedCode INTERFACE
     Source/PluginEditor.h
 )
 
-# ⚡ PARADIGMA 2: AISLAR NUESTROS RECURSOS
-# El comando juce_add_binary_data ya crea un objetivo llamado "BinaryData".
+# PASO 2: Aislar nuestros recursos en su propio objetivo.
 juce_add_binary_data(BinaryData
     SOURCES
-        # ... (Lista de 17 archivos sin cambios) ...
         Source/Resources/background.png
         Source/Resources/circular_grille.png
         Source/Resources/gain_reduction_frame.png
@@ -43,20 +40,30 @@ juce_add_binary_data(BinaryData
         Source/Resources/Sarpanch-Regular.ttf
 )
 
-# ⚡ PARADIGMA 3: ENSAMBLAJE EXPLÍCITO
-# Le decimos a juce_add_plugin que construya el plugin, pero en lugar de darle los archivos
-# fuente directamente, le decimos que enlace y consuma nuestras bibliotecas predefinidas.
-# Esto elimina toda ambigüedad y previene el enlace duplicado.
+# PASO 3: Invocar a juce_add_plugin en su forma más simple y tonta, sin archivos ni enlaces.
+# Solo le decimos que cree los "contenedores" de los formatos.
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME          "OpusNexus"
     FORMATS               VST2 VST3 AU
     BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
     PLUGIN_VST2_CATEGORY  "Dynamics"
-    # El enlace se define aquí, de forma clara y única.
-    LINK_LIBRARIES
+)
+
+# PASO 4: Enlazar explícitamente nuestras bibliotecas a CADA formato, de forma manual y consciente de la plataforma.
+# Este es el núcleo de la solución. Tomamos el control total del enlazador.
+set(TARGETS_TO_LINK "")
+if(TARGET DynamicRangeSentinel_VST3)
+    list(APPEND TARGETS_TO_LINK DynamicRangeSentinel_VST3)
+endif()
+if(TARGET DynamicRangeSentinel_AU)
+    list(APPEND TARGETS_TO_LINK DynamicRangeSentinel_AU)
+endif()
+if(TARGET DynamicRangeSentinel_VST2)
+    list(APPEND TARGETS_TO_LINK DynamicRangeSentinel_VST2)
+endif()
+
+target_link_libraries(${TARGETS_TO_LINK}
+    PRIVATE
         SharedCode
         BinaryData
 )
-
-# Ya no son necesarios los enlaces manuales `target_link_libraries`.
-# La directiva LINK_LIBRARIES anterior los hace obsoletos y dañinos.

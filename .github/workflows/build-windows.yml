@@ -1,32 +1,52 @@
-name: Build-Windows
+name: build-windows
 
 on:
   push:
     branches: [ main ]
   pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build-windows:
+    name: Build on Windows
     runs-on: windows-latest
 
+    env:
+      VST2_SDK_DIR: ${{ github.workspace }}/VST2_SDK # (si usás VST2 oficial, ajustá si no)
+
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up CMake
-      uses: jwlawson/actions-setup-cmake@v1
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v1
 
-    - name: Configure
-      run: cmake -B Builds -DCMAKE_BUILD_TYPE=Release
+      - name: Install JUCE dependencies
+        run: |
+          git config --global core.longpaths true
+          mkdir -p JUCE
+          git clone --depth 1 --branch 7.0.10 https://github.com/juce-framework/JUCE.git JUCE
 
-    - name: Build
-      run: cmake --build Builds --config Release
+      - name: Configure CMake
+        run: |
+          cmake -B Builds -DCMAKE_BUILD_TYPE=Release -A x64
 
-    - name: Find and Upload DLL
-      uses: actions/upload-artifact@v4
-      with:
-        name: DynamicRangeSentinel-VST2
-        path: |
-          Builds/**/DynamicRangeSentinel.dll
-          Builds/**/DynamicRangeSentinel.vst
-        if-no-files-found: error
+      - name: Build with MSBuild
+        run: cmake --build Builds --config Release
+
+      - name: Locate compiled .dll
+        id: locate
+        run: |
+          $dll = Get-ChildItem -Recurse -Filter "*.dll" -Path Builds | Select-Object -ExpandProperty FullName
+          if (-not $dll) {
+            Write-Error "No DLL file was found."
+            exit 1
+          }
+          echo "dllPath=$dll" >> $env:GITHUB_ENV
+
+      - name: Upload .dll artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DynamicRangeSentinel-Windows
+          path: ${{ env.dllPath }}

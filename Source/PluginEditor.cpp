@@ -2,6 +2,8 @@
 #include "PluginEditor.h"
 #include "BinaryData.h"
 
+#if JUCE_BUILD_GUI
+
 DynamicRangeSentinelEditor::DynamicRangeSentinelEditor (DynamicRangeSentinelProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
@@ -32,3 +34,5 @@ void DynamicRangeSentinelEditor::resized()
     targetPeakKnob.setBounds(95, 175, 150, 150);
     lookaheadSlider.setBounds(90, 395, 520, 25);
 }
+
+#endif // JUCE_BUILD_GUI

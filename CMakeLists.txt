@@ -11,7 +11,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
-# --- Platform GUI flag ---
+# --- Platform flags ---
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(BUILD_WITH_GUI OFF)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
@@ -22,7 +22,6 @@ endif()
 
 # --- Shared plugin source code ---
 add_library(SharedCode STATIC)
-
 target_sources(SharedCode PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
@@ -58,17 +57,18 @@ if(BUILD_WITH_GUI)
     target_link_libraries(SharedCode PRIVATE BinaryData)
 endif()
 
-# --- JUCE Modules (indispensable para todos los builds) ---
+# --- JUCE Modules (segmentados por GUI) ---
 target_link_libraries(SharedCode PRIVATE
     juce::juce_audio_processors
-    juce::juce_audio_utils
     juce::juce_core
 )
 
 if(BUILD_WITH_GUI)
     target_link_libraries(SharedCode PRIVATE
+        juce::juce_audio_utils
         juce::juce_gui_basics
         juce::juce_graphics
+        juce::juce_gui_extra
     )
 endif()
 
@@ -83,11 +83,9 @@ juce_add_plugin(DynamicRangeSentinel
     VST2_CATEGORY Dynamics
 )
 
-target_link_libraries(DynamicRangeSentinel PRIVATE
-    SharedCode
-)
+target_link_libraries(DynamicRangeSentinel PRIVATE SharedCode)
 
-# --- Safe macro definitions (evita errores con comillas) ---
+# --- Safe macro definitions (escape properly) ---
 add_compile_definitions(
     JucePlugin_Manufacturer=\"Patedefua\"
     JucePlugin_Name=\"DynamicRangeSentinel\"

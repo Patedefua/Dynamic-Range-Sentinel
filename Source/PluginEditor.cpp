@@ -1,42 +1,32 @@
+// ruta: Source/PluginEditor.cpp
+#include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "BinaryData.h"
 
+//==============================================================================
 DynamicRangeSentinelEditor::DynamicRangeSentinelEditor (DynamicRangeSentinelAudioProcessor& p)
     : AudioProcessorEditor (&p), processorRef (p)
 {
-    setSize (400, 200);
+    // Carga la imagen de fondo desde los datos binarios
+    backgroundImage = juce::ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
 
-    thresholdSlider.setSliderStyle (juce::Slider::LinearVertical);
-    thresholdSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 80, 20);
-    thresholdSlider.setRange (-60.0f, 0.0f);
-    thresholdSlider.setValue (*p.thresholdParam);
-    thresholdSlider.onValueChange = [this] {
-        processorRef.thresholdParam->setValueNotifyingHost ((float) thresholdSlider.getValue());
-    };
-    addAndMakeVisible (thresholdSlider);
-    thresholdLabel.setText ("Threshold", juce::dontSendNotification);
-    addAndMakeVisible (thresholdLabel);
-
-    ceilingSlider.setSliderStyle (juce::Slider::LinearVertical);
-    ceilingSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 80, 20);
-    ceilingSlider.setRange (-60.0f, 0.0f);
-    ceilingSlider.setValue (*p.ceilingParam);
-    ceilingSlider.onValueChange = [this] {
-        processorRef.ceilingParam->setValueNotifyingHost ((float) ceilingSlider.getValue());
-    };
-    addAndMakeVisible (ceilingSlider);
-    ceilingLabel.setText ("Ceiling", juce::dontSendNotification);
-    addAndMakeVisible (ceilingLabel);
+    // Configura el tamaño de la ventana del editor basado en la imagen de fondo
+    setSize (backgroundImage.getWidth(), backgroundImage.getHeight());
 }
 
-DynamicRangeSentinelEditor::~DynamicRangeSentinelEditor() = default;
-
-void DynamicRangeSentinelEditor::paint (juce::Graphics& g) {
-    g.fillAll (juce::Colours::black);
+DynamicRangeSentinelEditor::~DynamicRangeSentinelEditor()
+{
 }
 
-void DynamicRangeSentinelEditor::resized() {
-    thresholdSlider.setBounds (50, 30, 120, 150);
-    thresholdLabel.setBounds (50, 10, 120, 20);
-    ceilingSlider.setBounds (230, 30, 120, 150);
-    ceilingLabel.setBounds (230, 10, 120, 20);
+//==============================================================================
+void DynamicRangeSentinelEditor::paint (juce::Graphics& g)
+{
+    // Dibuja la imagen de fondo
+    g.drawImageAt(backgroundImage, 0, 0);
+}
+
+void DynamicRangeSentinelEditor::resized()
+{
+    // Aquí es donde posicionarías tus sliders y otros controles en el futuro.
+    // Por ahora, lo dejamos vacío.
 }

@@ -22,11 +22,14 @@ endif()
 
 # --- Shared plugin source code ---
 add_library(SharedCode STATIC)
+
+# Always include core processor sources
 target_sources(SharedCode PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
 )
 
+# Conditionally include GUI-related files
 if(BUILD_WITH_GUI)
     target_sources(SharedCode PRIVATE
         Source/PluginEditor.cpp
@@ -73,7 +76,7 @@ target_link_libraries(DynamicRangeSentinel PRIVATE
     juce::juce_audio_utils
 )
 
-# --- Safe macro definitions (escape properly) ---
+# --- Safe macro definitions (no errores en compiladores C++ modernos) ---
 add_compile_definitions(
     JucePlugin_Manufacturer=\"Patedefua\"
     JucePlugin_Name=\"DynamicRangeSentinel\"

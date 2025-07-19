@@ -41,3 +41,15 @@ jobs:
 
       - name: Build
         run: cmake --build Builds --config Release
+
+      - name: Upload VST plugin artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: DynamicRangeSentinel-${{ matrix.os }}
+          path: |
+            **/DynamicRangeSentinel.vst
+            **/DynamicRangeSentinel.vst3
+            **/DynamicRangeSentinel.dll
+            **/DynamicRangeSentinel.so
+            **/DynamicRangeSentinel.dylib

@@ -24,10 +24,8 @@ jobs:
         sudo apt-get install -y build-essential pkg-config gobjc++ libasound2-dev libjack-jackd2-dev libx11-dev libxinerama-dev libxrandr-dev libxcursor-dev libgl-dev libfreetype6-dev libfontconfig1-dev libgtk-3-dev
 
     - name: 3. Configurar CMake
-      # ⚡ CORRECCIÓN: Se fuerza el uso de 'bash' para unificar el intérprete en todos los OS.
       shell: bash
       run: |
-        # Para macOS, especificamos la construcción de un Binario Universal (Intel + Apple Silicon)
         if [ "${{ matrix.os }}" == "macos-latest" ]; then
           cmake . -B Builds -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
         else
@@ -37,34 +35,47 @@ jobs:
     - name: 4. Construir el Plugin con CMake
       run: cmake --build Builds --config Release
 
-    - name: 5. Preparar Paquete de Distribución
+    - name: 5. Diagnóstico de Archivos (Opcional)
+      # ⚡ MEJORA: Este paso listará todos los archivos generados para facilitar futuras depuraciones.
+      if: always() # Se ejecuta incluso si el paso anterior falla.
+      shell: bash
+      run: |
+        echo "--- Contenido del directorio de Builds ---"
+        ls -R Builds
+
+    - name: 6. Preparar Paquete de Distribución
       id: package
-      # ⚡ CORRECCIÓN: Se fuerza el uso de 'bash' para garantizar la compatibilidad de los comandos de empaquetado.
       shell: bash
       run: |
         PLUGIN_NAME="DynamicRangeSentinel"
-        RELEASE_DIR="Builds/${PLUGIN_NAME}_artefacts/Release/VST"
+        # ⚡ MODIFICACIÓN: La ruta base de los artefactos es ahora más genérica.
+        RELEASE_DIR="Builds/${PLUGIN_NAME}_artefacts/Release"
         PACKAGE_DIR="dist"
         
         mkdir -p $PACKAGE_DIR
 
         if [ "${{ matrix.os }}" == "windows-latest" ]; then
-          mv "$RELEASE_DIR/${PLUGIN_NAME}.dll" "$PACKAGE_DIR/"
-          ZIP_NAME="${PLUGIN_NAME}-VST2-Win.zip"
-          cd $PACKAGE_DIR && zip -r ../$ZIP_NAME . && cd ..
+          # Windows: VST2 (.dll) y VST3 (.vst3)
+          mv "$RELEASE_DIR/VST/${PLUGIN_NAME}.dll" "$PACKAGE_DIR/"
+          mv "$RELEASE_DIR/VST3/${PLUGIN_NAME}.vst3" "$PACKAGE_DIR/"
+          ZIP_NAME="${PLUGIN_NAME}-Win-Universal.zip"
         elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-          mv "$RELEASE_DIR/${PLUGIN_NAME}.so" "$PACKAGE_DIR/"
-          ZIP_NAME="${PLUGIN_NAME}-VST2-Linux.zip"
-          cd $PACKAGE_DIR && zip -r ../$ZIP_NAME . && cd ..
+          # Linux: VST2 (.so) y VST3 (.vst3)
+          mv "$RELEASE_DIR/VST/${PLUGIN_NAME}.so" "$PACKAGE_DIR/"
+          mv "$RELEASE_DIR/VST3/${PLUGIN_NAME}.vst3" "$PACKAGE_DIR/"
+          ZIP_NAME="${PLUGIN_NAME}-Linux-Universal.zip"
         elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-          mv "$RELEASE_DIR/${PLUGIN_NAME}.vst" "$PACKAGE_DIR/"
-          ZIP_NAME="${PLUGIN_NAME}-VST2-Mac-Universal.zip"
-          cd $PACKAGE_DIR && zip -r ../$ZIP_NAME . && cd ..
+          # macOS: VST3 (.vst3) y AudioUnit (.component)
+          mv "$RELEASE_DIR/VST3/${PLUGIN_NAME}.vst3" "$PACKAGE_DIR/"
+          mv "$RELEASE_DIR/AU/${PLUGIN_NAME}.component" "$PACKAGE_DIR/"
+          ZIP_NAME="${PLUGIN_NAME}-Mac-Universal.zip"
         fi
         
+        # Empaquetamos todo lo que hay en dist
+        cd $PACKAGE_DIR && zip -r ../$ZIP_NAME . && cd ..
         echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
 
-    - name: 6. Subir el Artefacto Comprimido
+    - name: 7. Subir el Artefacto Comprimido
       uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.package.outputs.zip_name }}

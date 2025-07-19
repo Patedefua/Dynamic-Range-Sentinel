@@ -68,10 +68,13 @@ juce_add_plugin(DynamicRangeSentinel
     VST2_CATEGORY Dynamics
 )
 
-target_link_libraries(DynamicRangeSentinel PRIVATE SharedCode juce::juce_audio_utils)
+target_link_libraries(DynamicRangeSentinel PRIVATE
+    SharedCode
+    juce::juce_audio_utils
+)
 
-# --- Plugin definitions to avoid macro errors ---
+# --- Safe macro definitions (escape properly) ---
 add_compile_definitions(
-    JucePlugin_Manufacturer="\"Patedefua\""
-    JucePlugin_Name="\"DynamicRangeSentinel\""
+    JucePlugin_Manufacturer=\"Patedefua\"
+    JucePlugin_Name=\"DynamicRangeSentinel\"
 )

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(DynamicRangeSentinel VERSION 1.0.1 LANGUAGES CXX)
+project(DynamicRangeSentinel VERSION 1.0.1 LANGUAGES CXX C OBJCXX)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -9,43 +9,40 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
-# Definiciones necesarias para evitar errores de compilación
+# Define plugin metadata (corregido con comillas simples para escapar dobles)
 add_compile_definitions(
-  JucePlugin_Name="\"DynamicRangeSentinel\""
-  JucePlugin_Manufacturer="\"Patedefua\""
-  JucePlugin_ManufacturerCode=PdFs
-  JucePlugin_PluginCode=DrSe
-  JucePlugin_IsSynth=0
-  JucePlugin_WantsMidiInput=0
-  JucePlugin_ProducesMidiOutput=0
-  JucePlugin_IsMidiEffect=0
-  JucePlugin_EditorRequiresKeyboardFocus=0
-  JucePlugin_Version=1.0.1
-  JucePlugin_VersionCode=0x10001
-  JucePlugin_VersionString="\"1.0.1\""
+    JucePlugin_Name='"DynamicRangeSentinel"'
+    JucePlugin_Manufacturer='"Patedefua"'
+    JucePlugin_PluginCode=DRSN
+    JucePlugin_IsSynth=0
+    JucePlugin_ProducesMidiOutput=0
+    JucePlugin_WantsMidiInput=0
+    JucePlugin_EditorRequiresKeyboardFocus=0
 )
 
-# Detectar plataforma
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    set(ENABLE_GUI TRUE)
-elif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    set(ENABLE_GUI TRUE)
+# Control de GUI por plataforma
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(JUCE_BUILD_GUI 0)
 else()
-    set(ENABLE_GUI FALSE)
+    set(JUCE_BUILD_GUI 1)
 endif()
 
-add_library(SharedCode STATIC
+# Crear biblioteca compartida de código fuente
+add_library(SharedCode INTERFACE)
+target_sources(SharedCode INTERFACE
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
 )
 
-if(ENABLE_GUI)
-    target_sources(SharedCode PRIVATE
+# Solo incluir PluginEditor si la GUI está habilitada
+if(JUCE_BUILD_GUI)
+    target_sources(SharedCode INTERFACE
         Source/PluginEditor.cpp
         Source/PluginEditor.h
     )
 endif()
 
+# Recursos embebidos
 juce_add_binary_data(BinaryData
     SOURCES
         Source/Resources/background.png
@@ -67,19 +64,22 @@ juce_add_binary_data(BinaryData
         Source/Resources/Sarpanch-Regular.ttf
 )
 
-target_link_libraries(SharedCode PRIVATE BinaryData)
+target_link_libraries(SharedCode INTERFACE BinaryData)
 
+# Crear plugin VST2 exclusivamente
 juce_add_plugin(DynamicRangeSentinel
-    COMPANY_NAME "OpusNexus"
-    FORMATS VST2
-    BUNDLE_ID com.opusnexus.DynamicRangeSentinel
-    PLUGIN_MANUFACTURER_CODE PdFs
-    PLUGIN_CODE DrSe
-    PRODUCT_NAME "DynamicRangeSentinel"
+    COMPANY_NAME          "OpusNexus"
+    FORMATS               VST2
+    BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
+    PLUGIN_VST2_CATEGORY  "Dynamics"
+    NEEDS_MIDI_INPUT      False
+    PRODUCES_MIDI_OUTPUT  False
+    IS_SYNTH              False
+    EDITOR_WANTS_KEYBOARD_FOCUS False
+    COPY_PLUGIN_AFTER_BUILD TRUE
 )
 
-if(ENABLE_GUI)
-    target_link_libraries(DynamicRangeSentinel PRIVATE juce::juce_gui_basics juce::juce_gui_extra)
+# Enlazar biblioteca compartida con el plugin
+if(TARGET DynamicRangeSentinel_VST2)
+    target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE SharedCode)
 endif()
-
-target_link_libraries(DynamicRangeSentinel PRIVATE SharedCode)

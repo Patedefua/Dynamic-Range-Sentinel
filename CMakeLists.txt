@@ -21,18 +21,36 @@ target_sources(SharedCode INTERFACE
 # PASO 2: Aislar nuestros recursos.
 juce_add_binary_data(BinaryData
     SOURCES
-        # ... (Lista de 17 archivos verificada) ...
+        # ⚡ CORRECCIÓN: Lista de 17 archivos restaurada.
+        Source/Resources/background.png
+        Source/Resources/circular_grille.png
+        Source/Resources/gain_reduction_frame.png
+        Source/Resources/gain_reduction_led.png
+        Source/Resources/hires_logo.png
+        Source/Resources/knob.png
+        Source/Resources/logo_plate.png
+        Source/Resources/quality_selector_knob.png
+        Source/Resources/slider_handle.png
+        Source/Resources/slider_track.png
+        Source/Resources/switch_off.png
+        Source/Resources/switch_on.png
+        Source/Resources/vu_meter_background.png
+        Source/Resources/vu_meter_background_peak.png
+        Source/Resources/vu_meter_needle.png
+        Source/Resources/waveform_graphic.png
+        Source/Resources/Sarpanch-Regular.ttf
 )
 
-# ⚡ EL PUENTE FINAL Y DECISIVO:
-# Hacemos que los 'include paths' de BinaryData sean visibles para SharedCode.
+# El puente que conecta los recursos con el código.
 target_link_libraries(SharedCode INTERFACE BinaryData)
 
 # PASO 3: Invocar a juce_add_plugin en su forma más simple.
+# He restaurado los formatos VST2/VST3/AU para una máxima compatibilidad.
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME          "OpusNexus"
-    FORMATS               VST3 AU # VST2 omitido por obsolescencia y para simplificar.
+    FORMATS               VST2 VST3 AU
     BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
+    PLUGIN_VST2_CATEGORY  "Dynamics"
 )
 
 # PASO 4: Enlace explícito y sintácticamente puro.

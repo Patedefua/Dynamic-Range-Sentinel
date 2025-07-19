@@ -2,25 +2,25 @@ name: Build on Windows
 
 on:
   push:
-    paths:
-      - '**.cpp'
-      - '**.h'
-      - '**CMakeLists.txt'
-      - '.github/workflows/build-windows.yml'
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   build-windows:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up MSVC Developer Command Prompt
+      - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Set up CMake
+      - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1
+        with:
+          cmake-version: '3.29.2'
 
       - name: Configure
         run: cmake -B Builds -DCMAKE_BUILD_TYPE=Release
@@ -28,20 +28,17 @@ jobs:
       - name: Build
         run: cmake --build Builds --config Release
 
-      - name: Find DLLs
-        id: find_dlls
+      - name: Locate and zip DLLs
+        shell: pwsh
         run: |
           $dlls = Get-ChildItem -Path Builds -Recurse -Filter *.dll | ForEach-Object { $_.FullName }
-          if ($dlls.Count -eq 0) {
+          if (-not $dlls) {
             Write-Error "❌ No DLLs were found!"
-          } else {
-            Write-Output "Found DLLs: $dlls"
-            $dllsList = $dlls -join "`n"
-            "dlls=$dllsList" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           }
+          Compress-Archive -Path $dlls -DestinationPath DynamicRangeSentinel-VST2.zip
 
-      - name: Upload DLL artifact
+      - name: Upload VST2 Plugin
         uses: actions/upload-artifact@v4
         with:
-          name: DynamicRangeSentinel
-          path: ${{ steps.find_dlls.outputs.dlls }}
+          name: DynamicRangeSentinel-VST2
+          path: DynamicRangeSentinel-VST2.zip

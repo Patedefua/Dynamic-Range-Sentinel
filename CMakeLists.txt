@@ -1,70 +1,89 @@
-cmake_minimum_required(VERSION 3.22)
-project(DynamicRangeSentinel VERSION 1.0.1 LANGUAGES CXX C OBJCXX)
+cmake_minimum_required(VERSION 3.15)
+
+# Detect platform
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    set(TARGET_PLATFORM_WINDOWS TRUE)
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+    set(TARGET_PLATFORM_MAC TRUE)
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    set(TARGET_PLATFORM_LINUX TRUE)
+endif()
+
+# ⚠️ NO INCLUIMOS OBJCXX para evitar errores en Linux
+project(DynamicRangeSentinel VERSION 1.0.1 LANGUAGES C CXX)
 
 include(FetchContent)
 FetchContent_Declare(
-    JUCE
-    GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-    GIT_TAG        7.0.10
+  JUCE
+  GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+  GIT_TAG 7.0.11
 )
 FetchContent_MakeAvailable(JUCE)
 
-# Plataforma específica: Activar GUI solo en Windows y macOS
-if(WIN32 OR APPLE)
-    set(ENABLE_GUI ON)
+option(BUILD_VST2_PLUGIN "Build VST2 plugin" ON)
+
+add_compile_definitions(
+  JucePlugin_Name="\"DynamicRangeSentinel\""
+  JucePlugin_Manufacturer="\"Patedefua\""
+  JucePlugin_ManufacturerCode=PdFs
+  JucePlugin_PluginCode=DrSe
+  JucePlugin_IsSynth=0
+  JucePlugin_WantsMidiInput=0
+  JucePlugin_ProducesMidiOutput=0
+  JucePlugin_IsMidiEffect=0
+  JucePlugin_EditorRequiresKeyboardFocus=0
+  JucePlugin_Version=1.0.1
+  JucePlugin_VersionCode=0x10001
+  JucePlugin_VersionString="1.0.1"
+)
+
+# Configuración de la GUI condicional
+if(TARGET_PLATFORM_LINUX)
+    message(STATUS "Building WITHOUT GUI on Linux")
+    set(JUCE_GUI_MODULES juce_audio_processors)
 else()
-    set(ENABLE_GUI OFF)
-endif()
-
-add_library(SharedCode INTERFACE)
-target_sources(SharedCode INTERFACE
-    Source/PluginProcessor.cpp
-    Source/PluginProcessor.h
-)
-
-if(ENABLE_GUI)
-    add_library(GuiCode INTERFACE)
-    target_sources(GuiCode INTERFACE
-        Source/PluginEditor.cpp
-        Source/PluginEditor.h
+    message(STATUS "Building WITH GUI")
+    set(JUCE_GUI_MODULES
+        juce_audio_utils
+        juce_gui_extra
     )
-    target_link_libraries(GuiCode INTERFACE SharedCode)
 endif()
 
-juce_add_binary_data(BinaryData
-    SOURCES
-        Source/Resources/background.png
-        Source/Resources/circular_grille.png
-        Source/Resources/gain_reduction_frame.png
-        Source/Resources/gain_reduction_led.png
-        Source/Resources/hires_logo.png
-        Source/Resources/knob.png
-        Source/Resources/logo_plate.png
-        Source/Resources/quality_selector_knob.png
-        Source/Resources/slider_handle.png
-        Source/Resources/slider_track.png
-        Source/Resources/switch_off.png
-        Source/Resources/switch_on.png
-        Source/Resources/vu_meter_background.png
-        Source/Resources/vu_meter_background_peak.png
-        Source/Resources/vu_meter_needle.png
-        Source/Resources/waveform_graphic.png
-        Source/Resources/Sarpanch-Regular.ttf
+# Plugin shared code
+add_library(SharedCode STATIC
+    Source/PluginProcessor.cpp
+    Source/PluginEditor.cpp
 )
 
-# ⚡ REDUCCIÓN ESTRATÉGICA: Solo VST2
-juce_add_plugin(DynamicRangeSentinel
-    COMPANY_NAME          "OpusNexus"
-    FORMATS               VST2
-    BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
-    PLUGIN_VST2_CATEGORY  "Dynamics"
+target_include_directories(SharedCode PRIVATE
+    Source
 )
 
-# Enlazar dependencias según GUI
-if(TARGET DynamicRangeSentinel_VST2)
-    if(ENABLE_GUI)
-        target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE GuiCode BinaryData)
-    else()
-        target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE SharedCode BinaryData)
-    endif()
+target_link_libraries(SharedCode
+    PRIVATE
+    juce::juce_audio_basics
+    juce::juce_audio_devices
+    juce::juce_audio_formats
+    juce::juce_audio_processors
+    ${JUCE_GUI_MODULES}
+)
+
+# VST2 target
+if(BUILD_VST2_PLUGIN)
+    juce_add_plugin(DynamicRangeSentinel
+        COMPANY_NAME "Patedefua"
+        PLUGIN_NAME "DynamicRangeSentinel"
+        PLUGIN_MANUFACTURER_CODE PdFs
+        PLUGIN_CODE DrSe
+        FORMATS VST2
+        PRODUCT_NAME "DynamicRangeSentinel"
+        COPY_PLUGIN_AFTER_BUILD TRUE
+    )
+
+    target_sources(DynamicRangeSentinel PRIVATE
+        Source/PluginProcessor.cpp
+        Source/PluginEditor.cpp
+    )
+
+    target_link_libraries(DynamicRangeSentinel PRIVATE SharedCode)
 endif()

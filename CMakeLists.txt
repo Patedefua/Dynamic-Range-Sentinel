@@ -17,8 +17,7 @@ target_sources(SharedCode INTERFACE
     Source/PluginEditor.h
 )
 
-# ⚡ RUTA EXPLÍCITA: Forzamos al compilador a buscar cabeceras en el directorio del VST2 SDK.
-# Esto resuelve el error "pluginterfaces/vst2.x/vstfxstore.h' file not found".
+# Ruta explícita al SDK incluido directamente en el repositorio.
 target_include_directories(SharedCode INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/vst2sdk>
 )
@@ -53,7 +52,7 @@ juce_add_plugin(DynamicRangeSentinel
     PLUGIN_VST2_CATEGORY  "Dynamics"
 )
 
-# Enlace explícito y condicional
+# Enlace explícito y condicional para máxima robustez.
 if(TARGET DynamicRangeSentinel_VST3)
     target_link_libraries(DynamicRangeSentinel_VST3 PRIVATE SharedCode)
 endif()

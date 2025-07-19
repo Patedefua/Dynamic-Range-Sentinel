@@ -35,7 +35,7 @@ jobs:
     - name: 4. Construir el Plugin con CMake
       run: cmake --build Builds --config Release
 
-    - name: 5. Preparar Paquete de Distribución
+    - name: 5. Preparar Paquete Antifrágil
       id: package
       shell: bash
       run: |
@@ -44,16 +44,19 @@ jobs:
         mkdir -p $PACKAGE_DIR
 
         if [ "${{ matrix.os }}" == "windows-latest" ]; then
-          RELEASE_DIR="Builds/${PLUGIN_NAME}_artefacts/Release/VST3"
-          mv "$RELEASE_DIR/${PLUGIN_NAME}.vst3" "$PACKAGE_DIR/"
+          # Encuentra dinámicamente el artefacto .vst3
+          PLUGIN_PATH=$(find Builds -name "${PLUGIN_NAME}.vst3" -print -quit)
+          mv "$PLUGIN_PATH" "$PACKAGE_DIR/"
           ZIP_NAME="${PLUGIN_NAME}-VST3-Win.zip"
         elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-          RELEASE_DIR="Builds/${PLUGIN_NAME}_artefacts/Release/VST3"
-          mv "$RELEASE_DIR/${PLUGIN_NAME}.vst3" "$PACKAGE_DIR/"
+          # Encuentra dinámicamente el artefacto .vst3
+          PLUGIN_PATH=$(find Builds -name "${PLUGIN_NAME}.vst3" -print -quit)
+          mv "$PLUGIN_PATH" "$PACKAGE_DIR/"
           ZIP_NAME="${PLUGIN_NAME}-VST3-Linux.zip"
         elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-          RELEASE_DIR="Builds/${PLUGIN_NAME}_artefacts/Release/AU"
-          mv "$RELEASE_DIR/${PLUGIN_NAME}.component" "$PACKAGE_DIR/"
+          # Encuentra dinámicamente el artefacto .component (que es un directorio)
+          PLUGIN_PATH=$(find Builds -name "${PLUGIN_NAME}.component" -type d -print -quit)
+          mv "$PLUGIN_PATH" "$PACKAGE_DIR/"
           ZIP_NAME="${PLUGIN_NAME}-AU-Mac-Universal.zip"
         fi
         

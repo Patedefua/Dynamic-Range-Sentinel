@@ -17,21 +17,13 @@ jobs:
     - name: 1. Clonar Repositorio
       uses: actions/checkout@v4
 
-    # ⚡ PROTOCOLO DE VERIFICACIÓN OBLIGATORIA ⚡
-    - name: 2. Mostrar Contenido de CMakeLists.txt
-      shell: bash
-      run: |
-        echo "---[ INICIO VERIFICACIÓN CMakeLists.txt ]---"
-        cat CMakeLists.txt
-        echo "---[ FIN VERIFICACIÓN CMakeLists.txt ]---"
-
-    - name: 3. Instalar Dependencias (Linux)
+    - name: 2. Instalar Dependencias (Linux)
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential pkg-config gobjc++ libasound2-dev libjack-jackd2-dev libx11-dev libxinerama-dev libxrandr-dev libxcursor-dev libgl-dev libfreetype6-dev
 
-    - name: 4. Configurar CMake
+    - name: 3. Configurar CMake
       shell: bash
       run: |
         SDK_PATH="vst2sdk"
@@ -41,7 +33,25 @@ jobs:
           cmake . -B Builds -D VST2_SDK_PATH=$SDK_PATH
         fi
 
+    # ⚡ PROTOCOLO DE PARCHE EN CALIENTE ⚡
+    - name: 4. Aplicar Parche en Caliente (macOS/Linux)
+      if: runner.os != 'Windows'
+      run: |
+        JUCE_FILE="Builds/_deps/juce-src/modules/juce_audio_plugin_client/juce_audio_plugin_client_VST3.cpp"
+        OLD_INCLUDE="#include \"pluginterfaces/vst2.x/vstfxstore.h\""
+        NEW_INCLUDE="#include \"../../../../vst2sdk/pluginterfaces/vst2.x/vstfxstore.h\""
+        
+        # El comando 'sed' varía ligeramente entre macOS y Linux
+        if [ "${{ matrix.os }}" == "macos-latest" ]; then
+          sed -i '' "s|${OLD_INCLUDE}|${NEW_INCLUDE}|g" ${JUCE_FILE}
+        else
+          sed -i "s|${OLD_INCLUDE}|${NEW_INCLUDE}|g" ${JUCE_FILE}
+        fi
+        
+        echo "Parche aplicado a ${JUCE_FILE}"
+
     - name: 5. Construir el Plugin con CMake
       run: cmake --build Builds --config Release
-      
-    # ... (El resto del archivo de empaquetado no cambia)
+
+    - name: 6. Preparar Paquete de Compatibilidad Total
+      # ... (Esta sección no cambia)

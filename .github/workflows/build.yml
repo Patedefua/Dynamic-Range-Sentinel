@@ -3,6 +3,9 @@ name: Construir y Publicar Plugin
 on:
   push:
     branches: [ main ]
+  # ⚡ MEJORA: Añadido trigger en Pull Requests para validación previa al merge.
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
@@ -21,13 +24,54 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential pkg-config gobjc++ libasound2-dev libjack-jackd2-dev libx11-dev libxinerama-dev libxrandr-dev libxcursor-dev libgl-dev libfreetype6-dev libfontconfig1-dev libgtk-3-dev
 
-    - name: 3. Construir el Plugin con CMake
+    - name: 3. Configurar CMake
+      # ⚡ MEJORA: Paso de configuración separado para claridad y adición de flags específicos por OS.
       run: |
-        cmake . -B Builds
-        cmake --build Builds --config Release
-    
-    - name: 4. Subir el Artefacto
+        # Para macOS, especificamos la construcción de un Binario Universal (Intel + Apple Silicon)
+        if [ "${{ matrix.os }}" == "macos-latest" ]; then
+          cmake . -B Builds -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+        else
+          cmake . -B Builds
+        fi
+
+    - name: 4. Construir el Plugin con CMake
+      # Compilación sin cambios, pero ahora se beneficia de la configuración anterior.
+      run: cmake --build Builds --config Release
+
+    - name: 5. Preparar Paquete de Distribución
+      # ⚡ MEJORA CRÍTICA: Empaquetado profesional del artefacto en un ZIP.
+      id: package
+      run: |
+        # Definimos nombres y rutas
+        PLUGIN_NAME="DynamicRangeSentinel"
+        RELEASE_DIR="Builds/${PLUGIN_NAME}_artefacts/Release/VST"
+        PACKAGE_DIR="dist"
+        
+        # Creamos el directorio de distribución
+        mkdir -p $PACKAGE_DIR
+
+        # Movemos los artefactos correctos al paquete
+        if [ "${{ matrix.os }}" == "windows-latest" ]; then
+          mv "$RELEASE_DIR/${PLUGIN_NAME}.dll" "$PACKAGE_DIR/"
+          ZIP_NAME="${PLUGIN_NAME}-VST2-Win.zip"
+          cd $PACKAGE_DIR && zip -r ../$ZIP_NAME . && cd ..
+        elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+          mv "$RELEASE_DIR/${PLUGIN_NAME}.so" "$PACKAGE_DIR/"
+          ZIP_NAME="${PLUGIN_NAME}-VST2-Linux.zip"
+          cd $PACKAGE_DIR && zip -r ../$ZIP_NAME . && cd ..
+        elif [ "${{ matrix.os }}" == "macos-latest" ]; then
+          # Los VST en Mac son directorios .vst
+          mv "$RELEASE_DIR/${PLUGIN_NAME}.vst" "$PACKAGE_DIR/"
+          ZIP_NAME="${PLUGIN_NAME}-VST2-Mac-Universal.zip"
+          cd $PACKAGE_DIR && zip -r ../$ZIP_NAME . && cd ..
+        fi
+        
+        # Guardamos el nombre del ZIP para el siguiente paso
+        echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
+
+    - name: 6. Subir el Artefacto Comprimido
+      # ⚡ MEJORA: Subimos el ZIP final, no el directorio de build.
       uses: actions/upload-artifact@v4
       with:
-        name: DRS-Build-${{ matrix.os }}
-        path: Builds/DynamicRangeSentinel_artefacts/Release/VST/
+        name: ${{ steps.package.outputs.zip_name }}
+        path: ${{ steps.package.outputs.zip_name }}

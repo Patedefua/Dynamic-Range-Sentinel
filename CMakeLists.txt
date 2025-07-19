@@ -18,7 +18,7 @@ if(DEFINED JUCE_USE_GUI AND NOT JUCE_USE_GUI)
     set(ENABLE_GUI OFF)
 endif()
 
-# Recursos gráficos (se compilan aunque no haya GUI)
+# Recursos gráficos
 juce_add_binary_data(BinaryData
     SOURCES
         Source/Resources/background.png
@@ -40,7 +40,7 @@ juce_add_binary_data(BinaryData
         Source/Resources/Sarpanch-Regular.ttf
 )
 
-# Código base (sin GUI)
+# Lógica sin GUI
 add_library(SharedCode STATIC
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
@@ -50,7 +50,7 @@ target_link_libraries(SharedCode PRIVATE
     juce::juce_audio_processors
 )
 
-# Código GUI (solo si está habilitado)
+# GUI opcional
 if(ENABLE_GUI)
     message(STATUS "✔ GUI habilitado: incluyendo PluginEditor.cpp/h")
     add_library(GuiCode STATIC
@@ -62,10 +62,10 @@ if(ENABLE_GUI)
         juce::juce_gui_extra
     )
 else()
-    message(STATUS "🚫 GUI deshabilitado: PluginEditor y juce_gui_extra no se incluirán")
+    message(STATUS "🚫 GUI deshabilitado: no se incluirá PluginEditor.* ni juce_gui_extra")
 endif()
 
-# Plugin principal: solo VST2 por ahora
+# Plugin principal
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME           "OpusNexus"
     FORMATS                VST2
@@ -79,8 +79,11 @@ juce_add_plugin(DynamicRangeSentinel
     EDITOR_IS_SUPPORTED    ${ENABLE_GUI}
 )
 
-# Enlazar al plugin según GUI activa o no
+# Enlazar el plugin con la lógica adecuada
 if(TARGET DynamicRangeSentinel_VST2)
+    # Agregamos la definición de getName() aquí
+    target_sources(DynamicRangeSentinel_VST2 PRIVATE Source/PluginMain.cpp)
+
     if(ENABLE_GUI)
         target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE GuiCode)
     else()

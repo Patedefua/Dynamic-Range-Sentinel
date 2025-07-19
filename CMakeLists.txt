@@ -9,23 +9,19 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
-# ===============================
-# ⚙️ OPCIÓN CONDICIONAL DE GUI
-# ===============================
-option(ENABLE_GUI "Enable GUI" ON)
+# Plataforma específica: Activar GUI solo en Windows y macOS
+if(WIN32 OR APPLE)
+    set(ENABLE_GUI ON)
+else()
+    set(ENABLE_GUI OFF)
+endif()
 
-# ===============================
-# 📁 ARCHIVOS SHARED
-# ===============================
 add_library(SharedCode INTERFACE)
 target_sources(SharedCode INTERFACE
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
 )
 
-# ===============================
-# 📁 ARCHIVOS GUI OPCIONALES
-# ===============================
 if(ENABLE_GUI)
     add_library(GuiCode INTERFACE)
     target_sources(GuiCode INTERFACE
@@ -35,9 +31,6 @@ if(ENABLE_GUI)
     target_link_libraries(GuiCode INTERFACE SharedCode)
 endif()
 
-# ===============================
-# 📁 RECURSOS BINARIOS
-# ===============================
 juce_add_binary_data(BinaryData
     SOURCES
         Source/Resources/background.png
@@ -59,22 +52,16 @@ juce_add_binary_data(BinaryData
         Source/Resources/Sarpanch-Regular.ttf
 )
 
-# ===============================
-# 🎛️ CONFIGURACIÓN DE PLUGIN
-# ===============================
+# ⚡ REDUCCIÓN ESTRATÉGICA: Solo VST2
 juce_add_plugin(DynamicRangeSentinel
-    COMPANY_NAME         "OpusNexus"
-    FORMATS              VST2
-    BUNDLE_ID            "com.opusnexus.DynamicRangeSentinel"
-    PLUGIN_VST2_CATEGORY "Dynamics"
+    COMPANY_NAME          "OpusNexus"
+    FORMATS               VST2
+    BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
+    PLUGIN_VST2_CATEGORY  "Dynamics"
 )
 
-# ===============================
-# 🔗 ENLACES FINALES POR TARGET
-# ===============================
+# Enlazar dependencias según GUI
 if(TARGET DynamicRangeSentinel_VST2)
-    target_sources(DynamicRangeSentinel_VST2 PRIVATE Source/PluginMain.cpp)
-
     if(ENABLE_GUI)
         target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE GuiCode BinaryData)
     else()

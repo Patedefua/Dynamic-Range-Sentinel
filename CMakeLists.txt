@@ -17,7 +17,7 @@ FetchContent_MakeAvailable(juce)
 # Ruta al SDK VST2
 set(VST2_SDK_PATH "${CMAKE_SOURCE_DIR}/vst2sdk/public.sdk/source/vst2.x")
 
-# Plugin principal
+# Plugin
 juce_add_plugin(DynamicRangeSentinel
   COMPANY_NAME "Patedefua"
   PLUGIN_NAME "Dynamic Range Sentinel"
@@ -25,8 +25,8 @@ juce_add_plugin(DynamicRangeSentinel
   PLUGIN_CODE DRS1
   FORMATS VST2
   PRODUCT_NAME "Dynamic Range Sentinel"
-  PLUGIN_GUI TRUE
   COPY_PLUGIN_AFTER_BUILD TRUE
+  PLUGIN_GUI TRUE
   SOURCE_FILES
     Source/PluginEditor.cpp
     Source/PluginEditor.h
@@ -56,26 +56,29 @@ juce_add_binary_data(BinaryData
     Source/Resources/Sarpanch-Regular.ttf
 )
 
-# Vincular recursos y JUCE
 target_link_libraries(DynamicRangeSentinel
   PRIVATE
     juce::juce_audio_utils
     BinaryData
 )
 
-# Definiciones necesarias para VST2
+# Para permitir VST2
 target_compile_definitions(DynamicRangeSentinel
   PRIVATE
     JUCE_VST3_CAN_REPLACE_VST2=0
+    JucePlugin_Build_VST=1
     JucePlugin_Build_VST2=1
 )
 
-# Incluir encabezados del VST2 SDK
+# Incluir ruta al VST2 SDK para JUCE
 target_include_directories(DynamicRangeSentinel
   PRIVATE "${VST2_SDK_PATH}"
 )
 
-# Forzar carpeta final estándar para .dll
+# Fuerza la salida del plugin como .dll y en la carpeta esperada
 set_target_properties(DynamicRangeSentinel PROPERTIES
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/DynamicRangeSentinel_artefacts/Release/VST2"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release"
+    OUTPUT_NAME "DynamicRangeSentinel"
 )

@@ -11,28 +11,18 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
-# --- Build GUI only on Windows ---
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    set(BUILD_WITH_GUI ON)
-else()
-    set(BUILD_WITH_GUI OFF)
-endif()
-
-# --- Shared plugin source code ---
+# --- Plugin source files ---
 add_library(SharedCode STATIC)
 target_sources(SharedCode PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
+    Source/PluginEditor.cpp
+    Source/PluginEditor.h
 )
 
-if(BUILD_WITH_GUI)
-    target_sources(SharedCode PRIVATE
-        Source/PluginEditor.cpp
-        Source/PluginEditor.h
-    )
-
-    juce_add_binary_data(BinaryData
-        SOURCES
+# --- Binary data (resources) ---
+juce_add_binary_data(BinaryData
+    SOURCES
             Source/Resources/background.png
             Source/Resources/circular_grille.png
             Source/Resources/gain_reduction_frame.png
@@ -51,16 +41,9 @@ if(BUILD_WITH_GUI)
             Source/Resources/waveform_graphic.png
             Source/Resources/Sarpanch-Regular.ttf
     )
+target_link_libraries(SharedCode PRIVATE BinaryData)
 
-    target_link_libraries(SharedCode PRIVATE BinaryData)
-endif()
-
-# --- Include JUCE headers for local FetchContent ---
-target_include_directories(SharedCode PRIVATE
-    ${JUCE_SOURCE_DIR}/modules
-)
-
-# --- Plugin Target ---
+# --- Plugin target ---
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME "OpusNexus"
     PLUGIN_MANUFACTURER_CODE OpNx
@@ -76,13 +59,18 @@ target_link_libraries(DynamicRangeSentinel PRIVATE
     juce::juce_audio_utils
 )
 
-# --- Safe macro definitions (escape properly) ---
-add_compile_definitions(
+# --- Proper macro definitions ---
+target_compile_definitions(DynamicRangeSentinel PRIVATE
     JucePlugin_Manufacturer=\"Patedefua\"
     JucePlugin_Name=\"DynamicRangeSentinel\"
 )
 
-# --- Set Windows DLL output folder ---
-set_target_properties(DynamicRangeSentinel PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release"
+# --- JUCE modules required ---
+target_link_libraries(SharedCode PRIVATE
+    juce::juce_audio_basics
+    juce::juce_audio_processors
+    juce::juce_audio_utils
+    juce::juce_graphics
+    juce::juce_gui_basics
+    juce::juce_gui_extra
 )

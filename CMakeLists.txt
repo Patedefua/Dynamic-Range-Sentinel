@@ -9,7 +9,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
-# PASO 1: Aislar nuestro código fuente en una biblioteca INTERFACE.
+# PASO 1: Aislar nuestro código fuente.
 add_library(SharedCode INTERFACE)
 target_sources(SharedCode INTERFACE
     Source/PluginProcessor.cpp
@@ -18,7 +18,7 @@ target_sources(SharedCode INTERFACE
     Source/PluginEditor.h
 )
 
-# PASO 2: Aislar nuestros recursos en su propio objetivo.
+# PASO 2: Aislar nuestros recursos.
 juce_add_binary_data(BinaryData
     SOURCES
         Source/Resources/background.png
@@ -40,8 +40,7 @@ juce_add_binary_data(BinaryData
         Source/Resources/Sarpanch-Regular.ttf
 )
 
-# PASO 3: Invocar a juce_add_plugin en su forma más simple y tonta, sin archivos ni enlaces.
-# Solo le decimos que cree los "contenedores" de los formatos.
+# PASO 3: Invocar a juce_add_plugin en su forma más simple.
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME          "OpusNexus"
     FORMATS               VST2 VST3 AU
@@ -49,21 +48,24 @@ juce_add_plugin(DynamicRangeSentinel
     PLUGIN_VST2_CATEGORY  "Dynamics"
 )
 
-# PASO 4: Enlazar explícitamente nuestras bibliotecas a CADA formato, de forma manual y consciente de la plataforma.
-# Este es el núcleo de la solución. Tomamos el control total del enlazador.
-set(TARGETS_TO_LINK "")
+# PASO 4: Enlace explícito y sintácticamente puro.
+# ⚡ CORRECCIÓN FINAL Y DEFINITIVA: Usamos un bucle para aplicar el enlace
+# con la firma de palabra clave a cada objetivo individualmente.
+# Esto elimina el conflicto de firmas.
+
+# Primero, creamos una lista de los objetivos que realmente se van a construir.
+set(PLUGIN_TARGETS "")
 if(TARGET DynamicRangeSentinel_VST3)
-    list(APPEND TARGETS_TO_LINK DynamicRangeSentinel_VST3)
+    list(APPEND PLUGIN_TARGETS DynamicRangeSentinel_VST3)
 endif()
 if(TARGET DynamicRangeSentinel_AU)
-    list(APPEND TARGETS_TO_LINK DynamicRangeSentinel_AU)
+    list(APPEND PLUGIN_TARGETS DynamicRangeSentinel_AU)
 endif()
 if(TARGET DynamicRangeSentinel_VST2)
-    list(APPEND TARGETS_TO_LINK DynamicRangeSentinel_VST2)
+    list(APPEND PLUGIN_TARGETS DynamicRangeSentinel_VST2)
 endif()
 
-target_link_libraries(${TARGETS_TO_LINK}
-    PRIVATE
-        SharedCode
-        BinaryData
-)
+# Luego, iteramos sobre la lista y enlazamos.
+foreach(PLUGIN_TARGET ${PLUGIN_TARGETS})
+    target_link_libraries(${PLUGIN_TARGET} PRIVATE SharedCode BinaryData)
+endforeach()

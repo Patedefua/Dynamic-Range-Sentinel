@@ -9,7 +9,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
-# PASO 1: Aislar nuestro código fuente.
 add_library(SharedCode INTERFACE)
 target_sources(SharedCode INTERFACE
     Source/PluginProcessor.cpp
@@ -18,7 +17,6 @@ target_sources(SharedCode INTERFACE
     Source/PluginEditor.h
 )
 
-# PASO 2: Aislar nuestros recursos.
 juce_add_binary_data(BinaryData
     SOURCES
         Source/Resources/background.png
@@ -40,11 +38,8 @@ juce_add_binary_data(BinaryData
         Source/Resources/Sarpanch-Regular.ttf
 )
 
-# PASO 3: Crear el puente de visibilidad entre el código y los recursos.
-# Esta línea es la que resuelve el error "undeclared identifier 'BinaryData'".
 target_link_libraries(SharedCode INTERFACE BinaryData)
 
-# PASO 4: Invocar a juce_add_plugin en su forma más simple.
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME          "OpusNexus"
     FORMATS               VST2 VST3 AU
@@ -52,19 +47,6 @@ juce_add_plugin(DynamicRangeSentinel
     PLUGIN_VST2_CATEGORY  "Dynamics"
 )
 
-# PASO 5: Enlace explícito y sintácticamente puro de los formatos de plugin.
 set(PLUGIN_TARGETS "")
 if(TARGET DynamicRangeSentinel_VST3)
-    list(APPEND PLUGIN_TARGETS DynamicRangeSentinel_VST3)
-endif()
-if(TARGET DynamicRangeSentinel_AU)
-    list(APPEND PLUGIN_TARGETS DynamicRangeSentinel_AU)
-endif()
-if(TARGET DynamicRangeSentinel_VST2)
-    list(APPEND PLUGIN_TARGETS DynamicRangeSentinel_VST2)
-endif()
-
-foreach(PLUGIN_TARGET ${PLUGIN_TARGETS})
-    # Enlazamos cada formato de plugin con nuestro código.
-    target_link_libraries(${PLUGIN_TARGET} PRIVATE SharedCode)
-endforeach()
+    list(APPEND PLUGIN_TARGETS DynamicRangeSentinel_VST3

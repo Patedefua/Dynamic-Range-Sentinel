@@ -20,13 +20,7 @@ Anfitrión (Host): Cualquier aplicación que soporte plugins VST2. Optimizado pa
 
 Windows: Equalizer APO
 
-Linux: EasyEffects
 
-Instalación Una vez que la "Forja Automática" de GitHub complete su trabajo, podrás descargar los instaladores desde la sección de "Releases" de este repositorio.
-
-Windows: Ejecuta el archivo .msi y sigue las instrucciones.
-
-Debian/Ubuntu: Instala el paquete .deb con tu gestor de software preferido.
 
 README.md (English) Dynamic Range Sentinel v1.0 by JPA & Opus-Nexus
 
@@ -49,11 +43,3 @@ System Requirements Platforms: Windows 10/11 (64-bit), Linux Distributions (64-b
 Host: Any application that supports VST2 plugins. Optimized for:
 
 Windows: Equalizer APO
-
-Linux: EasyEffects
-
-Installation Once the "Automatic Forge" on GitHub completes its work, you will be able to download the installers from the "Releases" section of this repository.
-
-Windows: Run the .msi file and follow the instructions.
-
-Debian/Ubuntu: Install the .deb package with your preferred software manager.

@@ -5,11 +5,10 @@ include(FetchContent)
 FetchContent_Declare(
     JUCE
     GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-    GIT_TAG        7.0.10 # Usamos una versión estable, no 'master'
+    GIT_TAG        7.0.10
 )
 FetchContent_MakeAvailable(JUCE)
 
-# Biblioteca para nuestro código fuente, hace el sistema modular.
 add_library(SharedCode INTERFACE)
 target_sources(SharedCode INTERFACE
     Source/PluginProcessor.cpp
@@ -18,7 +17,12 @@ target_sources(SharedCode INTERFACE
     Source/PluginEditor.h
 )
 
-# Recursos gráficos y fuentes.
+# ⚡ RUTA EXPLÍCITA: Forzamos al compilador a buscar cabeceras en el directorio del VST2 SDK.
+# Esto resuelve el error "pluginterfaces/vst2.x/vstfxstore.h' file not found".
+target_include_directories(SharedCode INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/vst2sdk>
+)
+
 juce_add_binary_data(BinaryData
     SOURCES
         Source/Resources/background.png
@@ -40,10 +44,8 @@ juce_add_binary_data(BinaryData
         Source/Resources/Sarpanch-Regular.ttf
 )
 
-# El puente de visibilidad entre el código y los recursos.
 target_link_libraries(SharedCode INTERFACE BinaryData)
 
-# El comando de JUCE para crear el plugin, simple y limpio.
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME          "OpusNexus"
     FORMATS               VST2 VST3
@@ -51,7 +53,7 @@ juce_add_plugin(DynamicRangeSentinel
     PLUGIN_VST2_CATEGORY  "Dynamics"
 )
 
-# Enlace explícito y condicional, la solución robusta.
+# Enlace explícito y condicional
 if(TARGET DynamicRangeSentinel_VST3)
     target_link_libraries(DynamicRangeSentinel_VST3 PRIVATE SharedCode)
 endif()

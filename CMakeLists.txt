@@ -14,7 +14,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(juce)
 
 # Ruta al VST2 SDK (ADAPTADA A TU REPO)
-set(VST2_SDK_PATH "${CMAKE_SOURCE_DIR}/vst2sdk/public.sdk/source/vst2.x")
+set(VST2_SDK_PATH "${CMAKE_SOURCE_DIR}/vst2sdk/public.sdk/source/vst2.x/")
 
 if(NOT EXISTS "${VST2_SDK_PATH}/aeffect.h")
     message(FATAL_ERROR "VST2 SDK no encontrado en: ${VST2_SDK_PATH}")

@@ -63,14 +63,14 @@ jobs:
         
         if [ "${{ matrix.os }}" == "windows-latest" ]; then
           # Encuentra y mueve VST2 (.dll)
-          VST2_PATH=$(find Builds -name "${PLUGIN_NAME}.dll" -print -quit)
+          VST2_PATH=$(find Builds -path "*Release/${PLUGIN_NAME}.dll" -print -quit)
           if [ -n "$VST2_PATH" ]; then
             mv "$VST2_PATH" "$PACKAGE_DIR/"
           fi
           ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Win.zip"
         elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
           # Encuentra y mueve VST2 (.so)
-          VST2_PATH=$(find Builds -name "${PLUGIN_NAME}.so" -print -quit)
+          VST2_PATH=$(find Builds -path "*${PLUGIN_NAME}.so" -print -quit)
           if [ -n "$VST2_PATH" ]; then
             mv "$VST2_PATH" "$PACKAGE_DIR/"
           fi
@@ -81,15 +81,15 @@ jobs:
           if [ -n "$VST2_PATH" ]; then
             mv "$VST2_PATH" "$PACKAGE_DIR/"
           fi
-          ZIP__NAME="${PLUGIN_NAME}-VST-Bundle-Mac-Universal.zip"
+          ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Mac-Universal.zip"
         fi
         
         cd $PACKAGE_DIR && zip -r ../$ZIP_NAME . && cd ..
         echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
 
     - name: 7. Subir el Artefacto Comprimido
-      working-directory: main
+      # ⚡ CORRECCIÓN: Eliminado el parámetro inválido 'working-directory'.
       uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.package.outputs.zip_name }}
-        path: ${{ steps.package.outputs.zip_name }}
+        path: main/${{ steps.package.outputs.zip_name }}

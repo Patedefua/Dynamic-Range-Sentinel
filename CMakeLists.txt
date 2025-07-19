@@ -48,4 +48,19 @@ else()
 endif()
 
 juce_add_plugin(DynamicRangeSentinel
-    COMPANY_NAME          "OpusNexus
+    COMPANY_NAME          "OpusNexus"
+    FORMATS               ${PLUGIN_FORMATS}
+    BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
+)
+
+set(PLUGIN_TARGETS "")
+if(TARGET DynamicRangeSentinel_VST3)
+    list(APPEND PLUGIN_TARGETS DynamicRangeSentinel_VST3)
+endif()
+if(TARGET DynamicRangeSentinel_AU)
+    list(APPEND PLUGIN_TARGETS DynamicRangeSentinel_AU)
+endif()
+
+foreach(PLUGIN_TARGET ${PLUGIN_TARGETS})
+    target_link_libraries(${PLUGIN_TARGET} PRIVATE SharedCode)
+endforeach()

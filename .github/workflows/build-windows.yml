@@ -32,7 +32,7 @@ jobs:
         run: Get-ChildItem -Recurse -File Builds
 
       - name: Upload DLL Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: DynamicRangeSentinel-VST2
           path: |

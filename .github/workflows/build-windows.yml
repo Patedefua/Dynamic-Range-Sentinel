@@ -1,17 +1,17 @@
-name: Build on Windows
+name: build-windows
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
-  build-windows:
+  build:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup MSVC
@@ -22,26 +22,23 @@ jobs:
         with:
           cmake-version: '3.27.0'
 
-      - name: Configure
+      - name: Configure CMake
         run: cmake -B Builds -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build Builds --config Release
 
-      - name: Locate DLL
-        id: locate_dll
+      - name: Locate VST2 DLL and Compress
         shell: pwsh
         run: |
           $dll = Get-ChildItem -Path Builds -Recurse -Filter "DynamicRangeSentinel.dll" | Select-Object -First 1
           if (-not $dll) {
             Write-Error "❌ No DLLs were found!"
-            exit 1
           }
-          echo "✅ Found: $($dll.FullName)"
-          echo "dll-path=$($dll.FullName)" >> $env:GITHUB_OUTPUT
+          Compress-Archive -Path $dll.FullName -DestinationPath "DynamicRangeSentinel-Windows.zip"
 
-      - name: Upload Plugin DLL
+      - name: Upload VST2 DLL Artifact
         uses: actions/upload-artifact@v4
         with:
           name: DynamicRangeSentinel-VST2
-          path: ${{ steps.locate_dll.outputs.dll-path }}
+          path: DynamicRangeSentinel-Windows.zip

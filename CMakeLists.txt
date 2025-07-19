@@ -40,27 +40,13 @@ juce_add_binary_data(BinaryData
 
 target_link_libraries(SharedCode INTERFACE BinaryData)
 
-# Define los formatos de forma adaptativa según la plataforma
-if(APPLE)
-    set(PLUGIN_FORMATS AU)
-else()
-    set(PLUGIN_FORMATS VST3)
-endif()
-
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME          "OpusNexus"
-    FORMATS               ${PLUGIN_FORMATS}
+    FORMATS               VST2 VST3
     BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
+    PLUGIN_VST2_CATEGORY  "Dynamics"
 )
 
-set(PLUGIN_TARGETS "")
-if(TARGET DynamicRangeSentinel_VST3)
-    list(APPEND PLUGIN_TARGETS DynamicRangeSentinel_VST3)
-endif()
-if(TARGET DynamicRangeSentinel_AU)
-    list(APPEND PLUGIN_TARGETS DynamicRangeSentinel_AU)
-endif()
-
-foreach(PLUGIN_TARGET ${PLUGIN_TARGETS})
-    target_link_libraries(${PLUGIN_TARGET} PRIVATE SharedCode)
-endforeach()
+# Enlace explícito y final para ambos formatos
+target_link_libraries(DynamicRangeSentinel_VST3 PRIVATE SharedCode)
+target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE SharedCode)

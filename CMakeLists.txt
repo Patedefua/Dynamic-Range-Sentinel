@@ -9,16 +9,35 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
-# Detectar si GUI está habilitado
-set(ENABLE_GUI ON)
-if(DEFINED JUCE_BUILD_GUI_CLASSES AND NOT JUCE_BUILD_GUI_CLASSES)
-    set(ENABLE_GUI OFF)
-endif()
-if(DEFINED JUCE_USE_GUI AND NOT JUCE_USE_GUI)
-    set(ENABLE_GUI OFF)
+# ===============================
+# ⚙️ OPCIÓN CONDICIONAL DE GUI
+# ===============================
+option(ENABLE_GUI "Enable GUI" ON)
+
+# ===============================
+# 📁 ARCHIVOS SHARED
+# ===============================
+add_library(SharedCode INTERFACE)
+target_sources(SharedCode INTERFACE
+    Source/PluginProcessor.cpp
+    Source/PluginProcessor.h
+)
+
+# ===============================
+# 📁 ARCHIVOS GUI OPCIONALES
+# ===============================
+if(ENABLE_GUI)
+    add_library(GuiCode INTERFACE)
+    target_sources(GuiCode INTERFACE
+        Source/PluginEditor.cpp
+        Source/PluginEditor.h
+    )
+    target_link_libraries(GuiCode INTERFACE SharedCode)
 endif()
 
-# Recursos gráficos
+# ===============================
+# 📁 RECURSOS BINARIOS
+# ===============================
 juce_add_binary_data(BinaryData
     SOURCES
         Source/Resources/background.png
@@ -40,53 +59,25 @@ juce_add_binary_data(BinaryData
         Source/Resources/Sarpanch-Regular.ttf
 )
 
-# Lógica sin GUI
-add_library(SharedCode STATIC
-    Source/PluginProcessor.cpp
-    Source/PluginProcessor.h
-)
-target_link_libraries(SharedCode PRIVATE
-    BinaryData
-    juce::juce_audio_processors
-)
-
-# GUI opcional
-if(ENABLE_GUI)
-    message(STATUS "✔ GUI habilitado: incluyendo PluginEditor.cpp/h")
-    add_library(GuiCode STATIC
-        Source/PluginEditor.cpp
-        Source/PluginEditor.h
-    )
-    target_link_libraries(GuiCode PRIVATE
-        SharedCode
-        juce::juce_gui_extra
-    )
-else()
-    message(STATUS "🚫 GUI deshabilitado: no se incluirá PluginEditor.* ni juce_gui_extra")
-endif()
-
-# Plugin principal
+# ===============================
+# 🎛️ CONFIGURACIÓN DE PLUGIN
+# ===============================
 juce_add_plugin(DynamicRangeSentinel
-    COMPANY_NAME           "OpusNexus"
-    FORMATS                VST2
-    BUNDLE_ID              "com.opusnexus.DynamicRangeSentinel"
-    PLUGIN_VST2_CATEGORY   "Dynamics"
-    IS_SYNTH               FALSE
-    NEEDS_MIDI_INPUT       FALSE
-    NEEDS_MIDI_OUTPUT      FALSE
-    IS_MIDI_EFFECT         FALSE
-    EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-    EDITOR_IS_SUPPORTED    ${ENABLE_GUI}
+    COMPANY_NAME         "OpusNexus"
+    FORMATS              VST2
+    BUNDLE_ID            "com.opusnexus.DynamicRangeSentinel"
+    PLUGIN_VST2_CATEGORY "Dynamics"
 )
 
-# Enlazar el plugin con la lógica adecuada
+# ===============================
+# 🔗 ENLACES FINALES POR TARGET
+# ===============================
 if(TARGET DynamicRangeSentinel_VST2)
-    # Agregamos la definición de getName() aquí
     target_sources(DynamicRangeSentinel_VST2 PRIVATE Source/PluginMain.cpp)
 
     if(ENABLE_GUI)
-        target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE GuiCode)
+        target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE GuiCode BinaryData)
     else()
-        target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE SharedCode)
+        target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE SharedCode BinaryData)
     endif()
 endif()

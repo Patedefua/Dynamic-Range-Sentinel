@@ -11,7 +11,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
-# --- Platform flags ---
+# --- Platform GUI flag ---
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(BUILD_WITH_GUI OFF)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
@@ -23,13 +23,11 @@ endif()
 # --- Shared plugin source code ---
 add_library(SharedCode STATIC)
 
-# Always include core processor sources
 target_sources(SharedCode PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
 )
 
-# Conditionally include GUI-related files
 if(BUILD_WITH_GUI)
     target_sources(SharedCode PRIVATE
         Source/PluginEditor.cpp
@@ -60,6 +58,20 @@ if(BUILD_WITH_GUI)
     target_link_libraries(SharedCode PRIVATE BinaryData)
 endif()
 
+# --- JUCE Modules (indispensable para todos los builds) ---
+target_link_libraries(SharedCode PRIVATE
+    juce::juce_audio_processors
+    juce::juce_audio_utils
+    juce::juce_core
+)
+
+if(BUILD_WITH_GUI)
+    target_link_libraries(SharedCode PRIVATE
+        juce::juce_gui_basics
+        juce::juce_graphics
+    )
+endif()
+
 # --- Plugin Target ---
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME "OpusNexus"
@@ -73,10 +85,9 @@ juce_add_plugin(DynamicRangeSentinel
 
 target_link_libraries(DynamicRangeSentinel PRIVATE
     SharedCode
-    juce::juce_audio_utils
 )
 
-# --- Safe macro definitions (no errores en compiladores C++ modernos) ---
+# --- Safe macro definitions (evita errores con comillas) ---
 add_compile_definitions(
     JucePlugin_Manufacturer=\"Patedefua\"
     JucePlugin_Name=\"DynamicRangeSentinel\"

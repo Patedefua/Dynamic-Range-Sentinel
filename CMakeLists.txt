@@ -1,22 +1,20 @@
 cmake_minimum_required(VERSION 3.22)
 project(DynamicRangeSentinel VERSION 1.0.1 LANGUAGES CXX C OBJCXX)
 
-# Usamos FetchContent para obtener JUCE, anclado a una versión estable para builds reproducibles.
 include(FetchContent)
 FetchContent_Declare(
     JUCE
     GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-    # ⚡ MODIFICACIÓN CRÍTICA: Anclado a una versión estable en lugar de 'master'.
     GIT_TAG        7.0.10
 )
 FetchContent_MakeAvailable(JUCE)
 
-# Usamos el comando oficial de JUCE para crear el plugin.
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME          "OpusNexus"
-    FORMATS               VST2
+    # ⚡ EVOLUCIÓN ESTRATÉGICA: Añadimos VST3 y AU. VST2 se construirá donde sea posible.
+    FORMATS               VST2 VST3 AU
     BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
-    PLUGIN_VST2_CATEGORY  "Dynamics"
+    PLUGIN_VST2_CATEGORY  "Dynamics" # Esta categoría solo aplica a VST2
     SOURCE_FILES
         Source/PluginProcessor.cpp
         Source/PluginProcessor.h
@@ -24,11 +22,10 @@ juce_add_plugin(DynamicRangeSentinel
         Source/PluginEditor.h
 )
 
-# Añadimos todos los recursos gráficos y tipográficos como datos binarios.
-# Lista de 17 archivos verificada y sin cambios.
 juce_add_binary_data(BinaryData
     TARGET DynamicRangeSentinel
     SOURCES
+        # ... (Lista de 17 archivos sin cambios) ...
         Source/Resources/background.png
         Source/Resources/circular_grille.png
         Source/Resources/gain_reduction_frame.png

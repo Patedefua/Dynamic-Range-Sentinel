@@ -40,19 +40,15 @@ juce_add_binary_data(BinaryData
 
 target_link_libraries(SharedCode INTERFACE BinaryData)
 
+# ⚡ REDUCCIÓN ESTRATÉGICA: Construimos únicamente VST2.
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME          "OpusNexus"
-    FORMATS               VST2 VST3
+    FORMATS               VST2
     BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
     PLUGIN_VST2_CATEGORY  "Dynamics"
 )
 
-# ⚡ CORRECCIÓN: Enlace explícito y CONDICIONAL.
-# Solo se enlaza un formato si el objetivo existe.
-if(TARGET DynamicRangeSentinel_VST3)
-    target_link_libraries(DynamicRangeSentinel_VST3 PRIVATE SharedCode)
-endif()
-
+# Enlace explícito y condicional para el único formato restante.
 if(TARGET DynamicRangeSentinel_VST2)
     target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE SharedCode)
 endif()

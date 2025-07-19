@@ -3,7 +3,6 @@ project(DynamicRangeSentinel VERSION 1.0.1 LANGUAGES CXX)
 
 include(FetchContent)
 
-# --- JUCE Framework fetch ---
 FetchContent_Declare(
     JUCE
     GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
@@ -11,16 +10,15 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
-# --- Plugin source files ---
-add_library(SharedCode STATIC)
-target_sources(SharedCode PRIVATE
+set(BUILD_WITH_GUI ON)
+
+add_library(SharedCode STATIC
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
     Source/PluginEditor.cpp
     Source/PluginEditor.h
 )
 
-# --- Binary data (resources) ---
 juce_add_binary_data(BinaryData
     SOURCES
             Source/Resources/background.png
@@ -41,9 +39,14 @@ juce_add_binary_data(BinaryData
             Source/Resources/waveform_graphic.png
             Source/Resources/Sarpanch-Regular.ttf
     )
-target_link_libraries(SharedCode PRIVATE BinaryData)
 
-# --- Plugin target ---
+target_link_libraries(SharedCode PRIVATE
+    juce::juce_audio_processors
+    juce::juce_gui_extra
+    juce::juce_audio_utils
+    BinaryData
+)
+
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME "OpusNexus"
     PLUGIN_MANUFACTURER_CODE OpNx
@@ -52,25 +55,13 @@ juce_add_plugin(DynamicRangeSentinel
     PRODUCT_NAME "DynamicRangeSentinel"
     BUNDLE_ID com.opusnexus.DynamicRangeSentinel
     VST2_CATEGORY Dynamics
+    COPY_PLUGIN_AFTER_BUILD TRUE
+    PLUGIN_OUTPUT_NAME "DynamicRangeSentinel"
 )
 
-target_link_libraries(DynamicRangeSentinel PRIVATE
-    SharedCode
-    juce::juce_audio_utils
-)
+target_link_libraries(DynamicRangeSentinel PRIVATE SharedCode)
 
-# --- Proper macro definitions ---
-target_compile_definitions(DynamicRangeSentinel PRIVATE
-    JucePlugin_Manufacturer=\"Patedefua\"
-    JucePlugin_Name=\"DynamicRangeSentinel\"
-)
-
-# --- JUCE modules required ---
-target_link_libraries(SharedCode PRIVATE
-    juce::juce_audio_basics
-    juce::juce_audio_processors
-    juce::juce_audio_utils
-    juce::juce_graphics
-    juce::juce_gui_basics
-    juce::juce_gui_extra
+add_compile_definitions(
+    JucePlugin_Manufacturer="\"Patedefua\""
+    JucePlugin_Name="\"DynamicRangeSentinel\""
 )

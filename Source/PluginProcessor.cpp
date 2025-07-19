@@ -1,5 +1,7 @@
 #include "PluginProcessor.h"
+#ifdef JUCE_BUILD_GUI
 #include "PluginEditor.h"
+#endif
 
 DynamicRangeSentinelProcessor::DynamicRangeSentinelProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -96,10 +98,21 @@ void DynamicRangeSentinelProcessor::processBlock(juce::AudioBuffer<float>& buffe
 
 juce::AudioProcessorEditor* DynamicRangeSentinelProcessor::createEditor()
 {
+#ifdef JUCE_BUILD_GUI
     return new DynamicRangeSentinelEditor(*this);
+#else
+    return nullptr;
+#endif
 }
 
-bool DynamicRangeSentinelProcessor::hasEditor() const { return true; }
+bool DynamicRangeSentinelProcessor::hasEditor() const
+{
+#ifdef JUCE_BUILD_GUI
+    return true;
+#else
+    return false;
+#endif
+}
 
 juce::AudioProcessorValueTreeState::ParameterLayout DynamicRangeSentinelProcessor::createParameterLayout()
 {

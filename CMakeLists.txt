@@ -49,4 +49,15 @@ juce_add_plugin(DynamicRangeSentinel
 
 set(PLUGIN_TARGETS "")
 if(TARGET DynamicRangeSentinel_VST3)
-    list(APPEND PLUGIN_TARGETS DynamicRangeSentinel_VST3
+    list(APPEND PLUGIN_TARGETS DynamicRangeSentinel_VST3)
+endif()
+if(TARGET DynamicRangeSentinel_AU)
+    list(APPEND PLUGIN_TARGETS DynamicRangeSentinel_AU)
+endif()
+if(TARGET DynamicRangeSentinel_VST2)
+    list(APPEND PLUGIN_TARGETS DynamicRangeSentinel_VST2)
+endif()
+
+foreach(PLUGIN_TARGET ${PLUGIN_TARGETS})
+    target_link_libraries(${PLUGIN_TARGET} PRIVATE SharedCode)
+endforeach()

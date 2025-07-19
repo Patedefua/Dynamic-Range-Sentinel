@@ -22,7 +22,8 @@ jobs:
     - name: 2. Clonar VST2 SDK
       uses: actions/checkout@v4
       with:
-        repository: 'public-SDKs/vst2-sdk'
+        # ⚡ CORRECCIÓN: Apuntamos a un repositorio del VST2 SDK válido y conocido.
+        repository: 'FigBug/VST2-SDK'
         path: vst2sdk
 
     - name: 3. Instalar Dependencias (Linux)
@@ -88,7 +89,6 @@ jobs:
         echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
 
     - name: 7. Subir el Artefacto Comprimido
-      # ⚡ CORRECCIÓN: Eliminado el parámetro inválido 'working-directory'.
       uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.package.outputs.zip_name }}

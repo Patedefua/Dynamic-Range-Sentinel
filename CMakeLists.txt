@@ -14,10 +14,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(juce)
 
-# Ruta al SDK VST2 (debe existir el archivo aeffect.h aquí)
+# Ruta al SDK VST2 (debe contener aeffect.h)
 set(VST2_SDK_PATH "${CMAKE_SOURCE_DIR}/vst2sdk/public.sdk/source/vst2.x")
 
-# Agregar plugin
+# Plugin
 juce_add_plugin(DynamicRangeSentinel
   COMPANY_NAME "Patedefua"
   PLUGIN_NAME "Dynamic Range Sentinel"
@@ -25,8 +25,8 @@ juce_add_plugin(DynamicRangeSentinel
   PLUGIN_CODE DRS1
   FORMATS VST2
   PRODUCT_NAME "Dynamic Range Sentinel"
-  COPY_PLUGIN_AFTER_BUILD TRUE
   PLUGIN_GUI TRUE
+  COPY_PLUGIN_AFTER_BUILD TRUE
   SOURCE_FILES
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
@@ -34,7 +34,7 @@ juce_add_plugin(DynamicRangeSentinel
     Source/PluginEditor.h
 )
 
-# Recursos binarios (imágenes y fuente)
+# Recursos binarios
 juce_add_binary_data(BinaryData
   SOURCES
     Source/Resources/background.png
@@ -56,13 +56,14 @@ juce_add_binary_data(BinaryData
     Source/Resources/Sarpanch-Regular.ttf
 )
 
+# Linkeo
 target_link_libraries(DynamicRangeSentinel
   PRIVATE
     juce::juce_audio_utils
     BinaryData
 )
 
-# Definiciones para habilitar VST2
+# Definiciones necesarias para VST2 real
 target_compile_definitions(DynamicRangeSentinel
   PRIVATE
     JUCE_VST3_CAN_REPLACE_VST2=0
@@ -73,4 +74,9 @@ target_compile_definitions(DynamicRangeSentinel
 # Incluir encabezados del SDK VST2
 target_include_directories(DynamicRangeSentinel
   PRIVATE "${VST2_SDK_PATH}"
+)
+
+# Forzar nombre final del DLL para EQ APO (sin espacios)
+set_target_properties(DynamicRangeSentinel PROPERTIES
+  OUTPUT_NAME "DynamicRangeSentinel"
 )

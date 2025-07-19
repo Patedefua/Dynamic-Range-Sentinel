@@ -16,6 +16,9 @@ jobs:
     steps:
     - name: 1. Clonar Repositorio
       uses: actions/checkout@v4
+      with:
+        # Usamos la inclusión directa del SDK, no submódulos
+        submodules: false
 
     - name: 2. Instalar Dependencias (Linux)
       if: matrix.os == 'ubuntu-latest'
@@ -33,7 +36,6 @@ jobs:
           cmake . -B Builds -D VST2_SDK_PATH=$SDK_PATH
         fi
 
-    # ⚡ PROTOCOLO DE PARCHE EN CALIENTE ⚡
     - name: 4. Aplicar Parche en Caliente (macOS/Linux)
       if: runner.os != 'Windows'
       run: |
@@ -41,7 +43,6 @@ jobs:
         OLD_INCLUDE="#include \"pluginterfaces/vst2.x/vstfxstore.h\""
         NEW_INCLUDE="#include \"../../../../vst2sdk/pluginterfaces/vst2.x/vstfxstore.h\""
         
-        # El comando 'sed' varía ligeramente entre macOS y Linux
         if [ "${{ matrix.os }}" == "macos-latest" ]; then
           sed -i '' "s|${OLD_INCLUDE}|${NEW_INCLUDE}|g" ${JUCE_FILE}
         else
@@ -54,4 +55,40 @@ jobs:
       run: cmake --build Builds --config Release
 
     - name: 6. Preparar Paquete de Compatibilidad Total
-      # ... (Esta sección no cambia)
+      id: package
+      shell: bash
+      run: |
+        PLUGIN_NAME="DynamicRangeSentinel"
+        PACKAGE_DIR="dist"
+        mkdir -p $PACKAGE_DIR
+
+        VST3_PATH=$(find Builds -name "${PLUGIN_NAME}.vst3" -print -quit)
+        if [ -n "$VST3_PATH" ]; then
+          mv "$VST3_PATH" "$PACKAGE_DIR/"
+        fi
+        
+        if [ "${{ matrix.os }}" == "windows-latest" ]; then
+          VST2_PATH=$(find Builds -path "*Release/${PLUGIN_NAME}.dll" -print -quit)
+          if [ -n "$VST2_PATH" ]; then
+            mv "$VST2_PATH" "$PACKAGE_DIR/"
+          fi
+          ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Win.zip"
+        elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+          VST2_PATH=$(find Builds -path "*${PLUGIN_NAME}.so" -print -quit)
+          if [ -n "$VST2_PATH" ]; then
+            mv "$VST2_PATH" "$PACKAGE_DIR/"
+          fi
+          ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Linux.zip"
+        elif [ "${{ matrix.os }}" == "macos-latest" ]; then
+          VST2_PATH=$(find Builds -name "${PLUGIN_NAME}.vst" -type d -print -quit)
+          if [ -n "$VST2_PATH" ]; then
+            mv "$VST2_PATH" "$PACKAGE_DIR/"
+          fi
+          ZIP_NAME="${PLUGIN_NAME}-VST-Bundle-Mac-Universal.zip"
+        fi
+        
+        cd $PACKAGE_DIR && zip -r ../$ZIP_NAME . && cd ..
+        echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
+
+    - name: 7. Subir el Artefacto Comprimido
+      uses: actions/upload-artifact@

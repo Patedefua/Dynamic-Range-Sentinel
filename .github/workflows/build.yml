@@ -17,13 +17,27 @@ jobs:
     - name: 1. Clonar Repositorio
       uses: actions/checkout@v4
 
-    - name: 2. Instalar Dependencias (Linux)
+    # ⚡ PROTOCOLO DE VERIFICACIÓN DE INTEGRIDAD ⚡
+    - name: 2. Diagnóstico de Integridad de Archivos
+      shell: bash
+      run: |
+        echo "---[ INICIO DIAGNÓSTICO ]---"
+        echo " "
+        echo ">>> CONTENIDO DE CMakeLists.txt:"
+        cat CMakeLists.txt
+        echo " "
+        echo ">>> CONTENIDO DE Source/PluginEditor.cpp:"
+        cat Source/PluginEditor.cpp
+        echo " "
+        echo "---[ FIN DIAGNÓSTICO ]---"
+
+    - name: 3. Instalar Dependencias (Linux)
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential pkg-config gobjc++ libasound2-dev libjack-jackd2-dev libx11-dev libxinerama-dev libxrandr-dev libxcursor-dev libgl-dev libfreetype6-dev libfontconfig1-dev libgtk-3-dev
 
-    - name: 3. Configurar CMake
+    - name: 4. Configurar CMake
       shell: bash
       run: |
         if [ "${{ matrix.os }}" == "macos-latest" ]; then
@@ -32,51 +46,8 @@ jobs:
           cmake . -B Builds
         fi
 
-    - name: 4. Construir el Plugin con CMake
+    - name: 5. Construir el Plugin con CMake
       run: cmake --build Builds --config Release
 
-    - name: 5. Diagnóstico de Archivos (Opcional)
-      # ⚡ MEJORA: Este paso listará todos los archivos generados para facilitar futuras depuraciones.
-      if: always() # Se ejecuta incluso si el paso anterior falla.
-      shell: bash
-      run: |
-        echo "--- Contenido del directorio de Builds ---"
-        ls -R Builds
-
     - name: 6. Preparar Paquete de Distribución
-      id: package
-      shell: bash
-      run: |
-        PLUGIN_NAME="DynamicRangeSentinel"
-        # ⚡ MODIFICACIÓN: La ruta base de los artefactos es ahora más genérica.
-        RELEASE_DIR="Builds/${PLUGIN_NAME}_artefacts/Release"
-        PACKAGE_DIR="dist"
-        
-        mkdir -p $PACKAGE_DIR
-
-        if [ "${{ matrix.os }}" == "windows-latest" ]; then
-          # Windows: VST2 (.dll) y VST3 (.vst3)
-          mv "$RELEASE_DIR/VST/${PLUGIN_NAME}.dll" "$PACKAGE_DIR/"
-          mv "$RELEASE_DIR/VST3/${PLUGIN_NAME}.vst3" "$PACKAGE_DIR/"
-          ZIP_NAME="${PLUGIN_NAME}-Win-Universal.zip"
-        elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-          # Linux: VST2 (.so) y VST3 (.vst3)
-          mv "$RELEASE_DIR/VST/${PLUGIN_NAME}.so" "$PACKAGE_DIR/"
-          mv "$RELEASE_DIR/VST3/${PLUGIN_NAME}.vst3" "$PACKAGE_DIR/"
-          ZIP_NAME="${PLUGIN_NAME}-Linux-Universal.zip"
-        elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-          # macOS: VST3 (.vst3) y AudioUnit (.component)
-          mv "$RELEASE_DIR/VST3/${PLUGIN_NAME}.vst3" "$PACKAGE_DIR/"
-          mv "$RELEASE_DIR/AU/${PLUGIN_NAME}.component" "$PACKAGE_DIR/"
-          ZIP_NAME="${PLUGIN_NAME}-Mac-Universal.zip"
-        fi
-        
-        # Empaquetamos todo lo que hay en dist
-        cd $PACKAGE_DIR && zip -r ../$ZIP_NAME . && cd ..
-        echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
-
-    - name: 7. Subir el Artefacto Comprimido
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ steps.package.outputs.zip_name }}
-        path: ${{ steps.package.outputs.zip_name }}
+      # ... (el resto del archivo no cambia) ...

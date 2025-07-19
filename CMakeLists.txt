@@ -1,5 +1,3 @@
-### ✅ CMakeLists.txt DEFINITIVO PARA VST2 CON GUI (WINDOWS)
-
 cmake_minimum_required(VERSION 3.15)
 
 project(DynamicRangeSentinel VERSION 1.0.0)
@@ -36,7 +34,7 @@ juce_add_plugin(DynamicRangeSentinel
     Source/PluginEditor.h
 )
 
-# Recursos gráficos y fuentes
+# Recursos binarios (gráficos y tipografía)
 juce_add_binary_data(BinaryData
   SOURCES
     Source/Resources/background.png
@@ -58,6 +56,7 @@ juce_add_binary_data(BinaryData
     Source/Resources/Sarpanch-Regular.ttf
 )
 
+# Enlazar binarios y utilidades
 target_link_libraries(DynamicRangeSentinel
   PRIVATE
     juce::juce_audio_utils
@@ -76,57 +75,3 @@ target_compile_definitions(DynamicRangeSentinel
 target_include_directories(DynamicRangeSentinel
   PRIVATE "${VST2_SDK_PATH}"
 )
-
-
-### ✅ build-windows.yml COMPLETO Y FUNCIONAL
-
-name: Build VST2 Plugin on Windows
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  build-windows:
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup MSVC environment
-        uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v1
-        with:
-          cmake-version: '3.27.0'
-
-      - name: Configure project
-        run: cmake -B Builds
-
-      - name: Build project
-        run: cmake --build Builds --config Release
-
-      - name: Find DLL and compress
-        shell: pwsh
-        run: |
-          $dll = Get-ChildItem -Path Builds -Recurse -Filter "*.dll" | Where-Object {
-            $_.FullName -match "artefacts.*Release.*\\.dll$"
-          } | Select-Object -First 1
-
-          if (-Not $dll) {
-            Write-Error "❌ No DLLs were found!"
-            exit 1
-          }
-
-          Write-Host "✅ Found DLL at $($dll.FullName)"
-          Compress-Archive -Path $dll.FullName -DestinationPath plugin.zip
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: DynamicRangeSentinel-VST2-Windows
-          path: plugin.zip

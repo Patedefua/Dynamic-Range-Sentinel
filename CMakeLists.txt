@@ -17,11 +17,6 @@ target_sources(SharedCode INTERFACE
     Source/PluginEditor.h
 )
 
-# Ruta explícita al SDK que resuelve el error.
-target_include_directories(SharedCode INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/vst2sdk>
-)
-
 juce_add_binary_data(BinaryData
     SOURCES
         Source/Resources/background.png
@@ -52,10 +47,14 @@ juce_add_plugin(DynamicRangeSentinel
     PLUGIN_VST2_CATEGORY  "Dynamics"
 )
 
-# Enlace explícito y condicional.
+# ⚡ INTERVENCIÓN DIRECTA: Aplicamos la configuración necesaria a cada objetivo final.
+# Esto evita cualquier fallo en la herencia de propiedades de CMake/JUCE.
 if(TARGET DynamicRangeSentinel_VST3)
     target_link_libraries(DynamicRangeSentinel_VST3 PRIVATE SharedCode)
+    target_include_directories(DynamicRangeSentinel_VST3 PRIVATE vst2sdk)
 endif()
+
 if(TARGET DynamicRangeSentinel_VST2)
     target_link_libraries(DynamicRangeSentinel_VST2 PRIVATE SharedCode)
+    target_include_directories(DynamicRangeSentinel_VST2 PRIVATE vst2sdk)
 endif()

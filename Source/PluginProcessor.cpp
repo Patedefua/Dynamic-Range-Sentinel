@@ -17,7 +17,7 @@ DynamicRangeSentinelProcessor::DynamicRangeSentinelProcessor()
 
 DynamicRangeSentinelProcessor::~DynamicRangeSentinelProcessor() {}
 
-const juce::String DynamicRangeSentinelProcessor::getName() const { return JucePlugin_Name; }
+#const juce::String DynamicRangeSentinelProcessor::getName() const { return JucePlugin_Name; }
 bool DynamicRangeSentinelProcessor::acceptsMidi() const { return false; }
 bool DynamicRangeSentinelProcessor::producesMidi() const { return false; }
 double DynamicRangeSentinelProcessor::getTailLengthSeconds() const { return 0.0; }

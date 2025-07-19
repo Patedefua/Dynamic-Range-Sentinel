@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.15)
 
-# Detect platform
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+# Detectar plataforma correctamente con comillas
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
     set(TARGET_PLATFORM_WINDOWS TRUE)
-elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
     set(TARGET_PLATFORM_MAC TRUE)
-elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
     set(TARGET_PLATFORM_LINUX TRUE)
 endif()
 
-# ⚠️ NO INCLUIMOS OBJCXX para evitar errores en Linux
+# ⚠️ Sin OBJCXX para evitar errores en Linux
 project(DynamicRangeSentinel VERSION 1.0.1 LANGUAGES C CXX)
 
 include(FetchContent)
@@ -37,19 +37,18 @@ add_compile_definitions(
   JucePlugin_VersionString="1.0.1"
 )
 
-# Configuración de la GUI condicional
+# GUI condicional
 if(TARGET_PLATFORM_LINUX)
-    message(STATUS "Building WITHOUT GUI on Linux")
+    message(STATUS "🔧 Linux detected: building without GUI.")
     set(JUCE_GUI_MODULES juce_audio_processors)
 else()
-    message(STATUS "Building WITH GUI")
+    message(STATUS "💻 GUI enabled (macOS or Windows).")
     set(JUCE_GUI_MODULES
         juce_audio_utils
         juce_gui_extra
     )
 endif()
 
-# Plugin shared code
 add_library(SharedCode STATIC
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
@@ -68,7 +67,6 @@ target_link_libraries(SharedCode
     ${JUCE_GUI_MODULES}
 )
 
-# VST2 target
 if(BUILD_VST2_PLUGIN)
     juce_add_plugin(DynamicRangeSentinel
         COMPANY_NAME "Patedefua"

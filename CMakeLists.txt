@@ -5,7 +5,7 @@ project(DynamicRangeSentinel VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# JUCE desde GitHub
+# JUCE vía FetchContent
 include(FetchContent)
 FetchContent_Declare(
   juce
@@ -14,10 +14,27 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(juce)
 
-# Ruta al SDK VST2 (verifica que exista)
+# Ruta al SDK VST2
 set(VST2_SDK_PATH "${CMAKE_SOURCE_DIR}/vst2sdk/public.sdk/source/vst2.x")
 
-# Incluir los recursos gráficos y fuente
+# Agregar plugin
+juce_add_plugin(DynamicRangeSentinel
+  COMPANY_NAME "Patedefua"
+  PLUGIN_NAME "DynamicRangeSentinel"
+  PLUGIN_MANUFACTURER_CODE PdFa
+  PLUGIN_CODE DRS1
+  FORMATS VST2
+  PRODUCT_NAME "DynamicRangeSentinel"
+  COPY_PLUGIN_AFTER_BUILD TRUE
+  PLUGIN_GUI TRUE
+  SOURCE_FILES
+    Source/PluginProcessor.cpp
+    Source/PluginProcessor.h
+    Source/PluginEditor.cpp
+    Source/PluginEditor.h
+)
+
+# Recursos binarios
 juce_add_binary_data(BinaryData
   SOURCES
     Source/Resources/background.png
@@ -39,31 +56,13 @@ juce_add_binary_data(BinaryData
     Source/Resources/Sarpanch-Regular.ttf
 )
 
-# Plugin VST2
-juce_add_plugin(DynamicRangeSentinel
-  COMPANY_NAME "Patedefua"
-  PLUGIN_NAME "DynamicRangeSentinel"
-  PLUGIN_MANUFACTURER_CODE PdFa
-  PLUGIN_CODE DRS1
-  FORMATS VST2
-  PRODUCT_NAME "Dynamic Range Sentinel"
-  COPY_PLUGIN_AFTER_BUILD TRUE
-  PLUGIN_GUI TRUE
-  SOURCE_FILES
-    Source/PluginProcessor.cpp
-    Source/PluginProcessor.h
-    Source/PluginEditor.cpp
-    Source/PluginEditor.h
-)
-
-# Link con recursos
 target_link_libraries(DynamicRangeSentinel
   PRIVATE
     juce::juce_audio_utils
     BinaryData
 )
 
-# Definiciones obligatorias para VST2
+# Definiciones para habilitar VST2
 target_compile_definitions(DynamicRangeSentinel
   PRIVATE
     JUCE_VST3_CAN_REPLACE_VST2=0

@@ -17,7 +17,7 @@ FetchContent_MakeAvailable(juce)
 # Ruta al SDK VST2
 set(VST2_SDK_PATH "${CMAKE_SOURCE_DIR}/vst2sdk/public.sdk/source/vst2.x")
 
-# Plugin
+# Plugin principal
 juce_add_plugin(DynamicRangeSentinel
   COMPANY_NAME "Patedefua"
   PLUGIN_NAME "Dynamic Range Sentinel"
@@ -25,8 +25,8 @@ juce_add_plugin(DynamicRangeSentinel
   PLUGIN_CODE DRS1
   FORMATS VST2
   PRODUCT_NAME "Dynamic Range Sentinel"
-  COPY_PLUGIN_AFTER_BUILD TRUE
   PLUGIN_GUI TRUE
+  COPY_PLUGIN_AFTER_BUILD TRUE
   SOURCE_FILES
     Source/PluginEditor.cpp
     Source/PluginEditor.h
@@ -56,46 +56,26 @@ juce_add_binary_data(BinaryData
     Source/Resources/Sarpanch-Regular.ttf
 )
 
-# Módulos y binarios
-
+# Vincular recursos y JUCE
 target_link_libraries(DynamicRangeSentinel
   PRIVATE
-    juce::juce_audio_basics
-    juce::juce_audio_devices
-    juce::juce_audio_formats
-    juce::juce_audio_processors
     juce::juce_audio_utils
-    juce::juce_core
-    juce::juce_data_structures
-    juce::juce_events
-    juce::juce_graphics
-    juce::juce_gui_basics
-    juce::juce_gui_extra
     BinaryData
 )
 
-# Para permitir VST2
-
+# Definiciones necesarias para VST2
 target_compile_definitions(DynamicRangeSentinel
   PRIVATE
     JUCE_VST3_CAN_REPLACE_VST2=0
-    JucePlugin_Build_VST=1
     JucePlugin_Build_VST2=1
 )
 
-# Incluir ruta al VST2 SDK para JUCE y al source de JUCE
-
+# Incluir encabezados del VST2 SDK
 target_include_directories(DynamicRangeSentinel
-  PRIVATE
-    "${JUCE_SOURCE_DIR}"
-    "${JUCE_SOURCE_DIR}/modules"
-    "${VST2_SDK_PATH}"
+  PRIVATE "${VST2_SDK_PATH}"
 )
 
-# Definiciones adicionales de JUCE
-
-target_compile_definitions(DynamicRangeSentinel
-  PRIVATE
-    JUCE_APPLICATION_NAME_STRING="$<TARGET_PROPERTY:DynamicRangeSentinel,JUCE_PRODUCT_NAME>"
-    JUCE_APPLICATION_VERSION_STRING="$<TARGET_PROPERTY:DynamicRangeSentinel,JUCE_VERSION>"
+# Forzar carpeta final estándar para .dll
+set_target_properties(DynamicRangeSentinel PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/DynamicRangeSentinel_artefacts/Release/VST2"
 )

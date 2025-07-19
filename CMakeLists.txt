@@ -17,7 +17,7 @@ target_sources(SharedCode INTERFACE
     Source/PluginEditor.h
 )
 
-# Ruta explícita al SDK incluido directamente en el repositorio.
+# Ruta explícita al SDK que resuelve el error.
 target_include_directories(SharedCode INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/vst2sdk>
 )
@@ -52,7 +52,7 @@ juce_add_plugin(DynamicRangeSentinel
     PLUGIN_VST2_CATEGORY  "Dynamics"
 )
 
-# Enlace explícito y condicional para máxima robustez.
+# Enlace explícito y condicional.
 if(TARGET DynamicRangeSentinel_VST3)
     target_link_libraries(DynamicRangeSentinel_VST3 PRIVATE SharedCode)
 endif()

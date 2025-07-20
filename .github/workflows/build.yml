@@ -15,7 +15,6 @@ jobs:
       - name: Checkout project code
         uses: actions/checkout@v4
         with:
-          # Especificamos la ruta para nuestro proyecto
           path: main
 
       # Paso 2: Descargar el VST2 SDK (solo si el sistema operativo es macOS)
@@ -23,9 +22,7 @@ jobs:
         if: runner.os == 'macOS'
         uses: actions/checkout@v4
         with:
-          # Especificamos el repositorio del SDK
           repository: steinbergmedia/vst2sdk
-          # Y la ruta donde lo queremos
           path: vst2sdk
 
       # Paso 3: Instalar dependencias de Linux (solo si es Linux)
@@ -33,14 +30,14 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          # Paquete 'libwebkit2gtk-4.0-dev' actualizado a 'libwebkitgtk-6.0-dev' para Ubuntu 24.04
           sudo apt-get install -y libasound2-dev libjack-jackd2-dev libfreetype6-dev libx11-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libwebkitgtk-6.0-dev
 
       # Paso 4: Compilación
       - name: Build
         id: build
-        # Nos movemos al directorio de nuestro proyecto antes de compilar
         working-directory: main
+        # LA SOLUCIÓN: Forzar el uso de Bash en todos los sistemas para unificar la ejecución
+        shell: bash 
         run: |
           if [ "${{ runner.os }}" == "macOS" ]; then
             # En macOS, le decimos a CMake dónde encontrar el SDK que descargamos en el paso 2
@@ -56,5 +53,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: DynamicRangeSentinel-${{ runner.os }}
-          # La ruta a los artefactos ahora está dentro del directorio 'main'
           path: main/Builds/DynamicRangeSentinel_artefacts/Release/

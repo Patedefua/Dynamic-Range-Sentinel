@@ -35,22 +35,31 @@ juce_add_binary_data(BinaryData
         Source/Resources/Sarpanch-Regular.ttf
 )
 
+# --- INICIO DE LA CORRECCIÓN ---
+
+# 1. Creamos una lista con los archivos fuente comunes a todas las plataformas
+set(PLUGIN_SOURCES
+    Source/PluginProcessor.cpp
+    Source/PluginProcessor.h
+)
+
+# 2. Si estamos en Windows, añadimos los archivos de la GUI a esa misma lista
+if(WIN32)
+    list(APPEND PLUGIN_SOURCES
+        Source/PluginEditor.cpp
+        Source/PluginEditor.h
+    )
+endif()
+
+# 3. Llamamos a juce_add_plugin una sola vez, pasándole la lista completa de archivos
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME          "OpusNexus"
     FORMATS               VST2
     BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
     PLUGIN_VST2_CATEGORY  "Dynamics"
-
-    SOURCES
-        Source/PluginProcessor.cpp
-        Source/PluginProcessor.h
+    SOURCES               ${PLUGIN_SOURCES}
 )
 
-if(WIN32)
-    target_sources(DynamicRangeSentinel PRIVATE
-        Source/PluginEditor.cpp
-        Source/PluginEditor.h
-    )
-endif()
+# --- FIN DE LA CORRECCIÓN ---
 
 target_link_libraries(DynamicRangeSentinel PRIVATE BinaryData)

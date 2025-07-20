@@ -1,4 +1,4 @@
-name: Build JUCE Project
+name: Build VST2 for Windows & Linux
 
 on: [push, pull_request]
 
@@ -6,12 +6,13 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        # Matriz de compilación reducida a nuestros objetivos de MVP
+        os: [windows-latest, ubuntu-latest]
     
     runs-on: ${{ matrix.os }}
     
     steps:
-      # Paso 1: Descargar el código fuente de nuestro proyecto.
+      # Paso 1: Descargar el código fuente.
       - name: Checkout project code
         uses: actions/checkout@v4
 
@@ -25,16 +26,11 @@ jobs:
       # Paso 3: Compilación
       - name: Build
         id: build
-        # Forzar el uso de Bash en todos los sistemas para unificar la ejecución.
+        # Forzar el uso de Bash en todos los sistemas.
         shell: bash 
         run: |
-          if [ "${{ runner.os }}" == "macOS" ]; then
-            # En macOS, apuntamos a la ruta exacta que me has mostrado en la captura.
-            cmake -B Builds -DJUCE_VST2_SDK_PATH=./vst2sdk/public.sdk/source/vst2.x
-          else
-            # Comando estándar para Windows y Linux.
-            cmake -B Builds
-          fi
+          # Comando de configuración estándar, ya no necesita condiciones especiales.
+          cmake -B Builds
           cmake --build Builds --config Release
 
       # Paso 4: Carga de los artefactos (instaladores)

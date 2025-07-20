@@ -6,7 +6,7 @@ jobs:
   build:
     strategy:
       matrix:
-        # Matriz de compilación reducida a nuestros objetivos de MVP
+        # Matriz de compilación para nuestros objetivos de MVP
         os: [windows-latest, ubuntu-latest]
     
     runs-on: ${{ matrix.os }}
@@ -21,7 +21,8 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libasound2-dev libjack-jackd2-dev libfreetype6-dev libx11-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libwebkitgtk-6.0-dev
+          # Paquete 'libgtk-3-dev' añadido para las dependencias de la GUI
+          sudo apt-get install -y libasound2-dev libjack-jackd2-dev libfreetype6-dev libx11-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libwebkitgtk-6.0-dev libgtk-3-dev
 
       # Paso 3: Compilación
       - name: Build
@@ -29,7 +30,7 @@ jobs:
         # Forzar el uso de Bash en todos los sistemas.
         shell: bash 
         run: |
-          # Comando de configuración estándar, ya no necesita condiciones especiales.
+          # Comando de configuración estándar.
           cmake -B Builds
           cmake --build Builds --config Release
 

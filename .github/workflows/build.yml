@@ -21,8 +21,14 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          # Paquete 'libgtk-3-dev' añadido para las dependencias de la GUI
           sudo apt-get install -y libasound2-dev libjack-jackd2-dev libfreetype6-dev libx11-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libwebkitgtk-6.0-dev libgtk-3-dev
+
+      # Paso 2.1: VERIFICACIÓN EXPLÍCITA DE DEPENDENCIAS
+      - name: Verify Dependencies
+        if: runner.os == 'Linux'
+        run: |
+          echo "Verificando la instalación de GTK3..."
+          pkg-config --modversion gtk+-3.0
 
       # Paso 3: Compilación
       - name: Build

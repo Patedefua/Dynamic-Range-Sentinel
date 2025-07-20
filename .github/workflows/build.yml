@@ -11,37 +11,49 @@ jobs:
     runs-on: ${{ matrix.os }}
     
     steps:
-      - uses: actions/checkout@v4
+      # Paso 1: Descargar el código fuente de nuestro proyecto (Dynamic Range Sentinel)
+      - name: Checkout project code
+        uses: actions/checkout@v4
+        with:
+          # Especificamos la ruta para nuestro proyecto
+          path: main
 
-      # --- Dependencias para Linux ---
+      # Paso 2: Descargar el VST2 SDK (solo si el sistema operativo es macOS)
+      - name: Checkout VST2 SDK
+        if: runner.os == 'macOS'
+        uses: actions/checkout@v4
+        with:
+          # Especificamos el repositorio del SDK
+          repository: steinbergmedia/vst2sdk
+          # Y la ruta donde lo queremos
+          path: vst2sdk
+
+      # Paso 3: Instalar dependencias de Linux (solo si es Linux)
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libasound2-dev libjack-jackd2-dev libfreetype6-dev libx11-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libwebkit2gtk-4.0-dev
 
-      # --- Clonar VST2 SDK (Solo para macOS, donde es requerido) ---
-      - name: Clone VST2 SDK
-        if: runner.os == 'macOS'
-        run: git clone https://github.com/steinbergmedia/vst2sdk.git ../vst2sdk
-
-      # --- Compilación ---
+      # Paso 4: Compilación
       - name: Build
         id: build
+        # Nos movemos al directorio de nuestro proyecto antes de compilar
+        working-directory: main
         run: |
           if [ "${{ runner.os }}" == "macOS" ]; then
-            # Pasa la ruta del VST2 SDK a CMake en macOS
+            # En macOS, le decimos a CMake dónde encontrar el SDK que descargamos en el paso 2
             cmake -B Builds -DJUCE_VST2_SDK_PATH=../vst2sdk
           else
-            # Comando CMake estándar para Windows y Linux
+            # Comando estándar para Windows y Linux
             cmake -B Builds
           fi
           cmake --build Builds --config Release
 
-      # --- Carga de Artefactos ---
+      # Paso 5: Carga de los artefactos (instaladores)
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: DynamicRangeSentinel-${{ runner.os }}
-          path: |
-            Builds/DynamicRangeSentinel_artefacts/Release/
+          # La ruta a los artefactos ahora está dentro del directorio 'main'
+          path: main/Builds/DynamicRangeSentinel_artefacts/Release/

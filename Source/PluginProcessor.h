@@ -32,13 +32,10 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-    // ⚡ ARQUITECTURA MODERNA: Usamos AudioProcessorValueTreeState para gestionar todos los parámetros.
     juce::AudioProcessorValueTreeState apvts;
 
 private:
-    // ⚡ LÓGICA DE AUDIO REAL: Usamos el DSP de JUCE para un limitador profesional.
     juce::dsp::Limiter<float> limiter;
-
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DynamicRangeSentinelAudioProcessor)

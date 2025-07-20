@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 project(DynamicRangeSentinel VERSION 1.0.1 LANGUAGES CXX C)
 
-# Directiva para forzar una compilación autocontenida en Linux, ignorando librerías de sistema
 if(UNIX AND NOT APPLE)
     set(JUCE_USE_SYSTEM_PACKAGED_LIBS OFF)
 endif()
@@ -35,15 +34,11 @@ juce_add_binary_data(BinaryData
         Source/Resources/Sarpanch-Regular.ttf
 )
 
-# --- INICIO DE LA CORRECCIÓN ---
-
-# 1. Creamos una lista con los archivos fuente comunes a todas las plataformas
 set(PLUGIN_SOURCES
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
 )
 
-# 2. Si estamos en Windows, añadimos los archivos de la GUI a esa misma lista
 if(WIN32)
     list(APPEND PLUGIN_SOURCES
         Source/PluginEditor.cpp
@@ -51,7 +46,6 @@ if(WIN32)
     )
 endif()
 
-# 3. Llamamos a juce_add_plugin una sola vez, pasándole la lista completa de archivos
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME          "OpusNexus"
     FORMATS               VST2
@@ -59,7 +53,5 @@ juce_add_plugin(DynamicRangeSentinel
     PLUGIN_VST2_CATEGORY  "Dynamics"
     SOURCES               ${PLUGIN_SOURCES}
 )
-
-# --- FIN DE LA CORRECCIÓN ---
 
 target_link_libraries(DynamicRangeSentinel PRIVATE BinaryData)

@@ -17,15 +17,8 @@ jobs:
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
-          echo "--- INICIANDO INSTALACIÓN DE DEPENDENCIAS (VERSIÓN MARCADA Y CORREGIDA DE NEXUS) ---"
           sudo apt-get update
           sudo apt-get install -y libasound2-dev libjack-jackd2-dev libfreetype6-dev libx11-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libwebkitgtk-6.0-dev libgtk-3-dev
-
-      - name: Verify Dependencies
-        if: runner.os == 'Linux'
-        run: |
-          echo "--- VERIFICANDO LA INSTALACIÓN DE GTK3 ---"
-          pkg-config --modversion gtk+-3.0
 
       - name: Build
         id: build

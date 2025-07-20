@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
-project(DynamicRangeSentinel VERSION 1.0.1 LANGUAGES CXX C OBJCXX)
+# Requisito de OBJCXX eliminado. Dejamos que JUCE lo active solo si es necesario (en macOS).
+project(DynamicRangeSentinel VERSION 1.0.1 LANGUAGES CXX C)
 
 include(FetchContent)
 FetchContent_Declare(

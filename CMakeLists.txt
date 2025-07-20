@@ -36,13 +36,17 @@ juce_add_plugin(DynamicRangeSentinel
     BUNDLE_ID             "com.opusnexus.DynamicRangeSentinel"
     PLUGIN_VST2_CATEGORY  "Dynamics"
 
-    # Los archivos fuente se declaran AQUI DENTRO, no después.
     SOURCES
         Source/PluginProcessor.cpp
         Source/PluginProcessor.h
-        Source/PluginEditor.cpp
-        Source/PluginEditor.h
 )
 
-# Vincula los recursos binarios al plugin
+# Añade los archivos de la Interfaz Gráfica (GUI) solo si se compila para Windows
+if(WIN32)
+    target_sources(DynamicRangeSentinel PRIVATE
+        Source/PluginEditor.cpp
+        Source/PluginEditor.h
+    )
+endif()
+
 target_link_libraries(DynamicRangeSentinel PRIVATE BinaryData)

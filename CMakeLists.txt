@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.22)
 project(DynamicRangeSentinel VERSION 1.0.1 LANGUAGES CXX C)
 
+# Directiva para forzar una compilación autocontenida en Linux, ignorando librerías de sistema
+if(UNIX AND NOT APPLE)
+    set(JUCE_USE_SYSTEM_PACKAGED_LIBS OFF)
+endif()
+
 include(FetchContent)
 FetchContent_Declare(
     JUCE
@@ -41,7 +46,6 @@ juce_add_plugin(DynamicRangeSentinel
         Source/PluginProcessor.h
 )
 
-# Añade los archivos de la Interfaz Gráfica (GUI) solo si se compila para Windows
 if(WIN32)
     target_sources(DynamicRangeSentinel PRIVATE
         Source/PluginEditor.cpp

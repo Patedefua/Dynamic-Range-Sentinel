@@ -26,15 +26,10 @@ jobs:
     - name: 3. Configurar CMake
       shell: bash
       run: |
-        # La ruta al SDK es ahora un directorio local simple.
-        SDK_PATH="vst2sdk"
-        
         if [ "${{ matrix.os }}" == "macos-latest" ]; then
-          # ⚡ NOTA RESTAURADA: Añadimos de nuevo la instrucción -D VST2_SDK_PATH
-          cmake . -B Builds -D VST2_SDK_PATH=$SDK_PATH -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+          cmake . -B Builds -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
         else
-          # ⚡ NOTA RESTAURADA: Añadimos de nuevo la instrucción -D VST2_SDK_PATH
-          cmake . -B Builds -D VST2_SDK_PATH=$SDK_PATH
+          cmake . -B Builds
         fi
 
     - name: 4. Construir el Plugin con CMake

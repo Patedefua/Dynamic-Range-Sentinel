@@ -17,9 +17,9 @@ jobs:
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
-          # Lista de dependencias mínima y precisa para satisfacer los requisitos del núcleo de JUCE
+          # Lista completa de dependencias de bajo nivel para satisfacer los requisitos del núcleo de JUCE
           sudo apt-get update
-          sudo apt-get install -y libasound2-dev libjack-jackd2-dev libx11-dev libfreetype6-dev
+          sudo apt-get install -y libasound2-dev libjack-jackd2-dev libx11-dev libfreetype6-dev libxrandr-dev libxinerama-dev libxcursor-dev libxext-dev
 
       - name: Build
         id: build

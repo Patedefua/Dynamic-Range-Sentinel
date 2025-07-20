@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.22)
-# Requisito de OBJCXX eliminado. Dejamos que JUCE lo active solo si es necesario (en macOS).
 project(DynamicRangeSentinel VERSION 1.0.1 LANGUAGES CXX C)
 
 include(FetchContent)
@@ -9,14 +8,6 @@ FetchContent_Declare(
     GIT_TAG        7.0.10
 )
 FetchContent_MakeAvailable(JUCE)
-
-add_library(SharedCode INTERFACE)
-target_sources(SharedCode INTERFACE
-    Source/PluginProcessor.cpp
-    Source/PluginProcessor.h
-    Source/PluginEditor.cpp
-    Source/PluginEditor.h
-)
 
 juce_add_binary_data(BinaryData
     SOURCES
@@ -39,9 +30,6 @@ juce_add_binary_data(BinaryData
         Source/Resources/Sarpanch-Regular.ttf
 )
 
-target_link_libraries(SharedCode INTERFACE BinaryData)
-
-# Define el plugin y especifica construir ÚNICAMENTE el formato VST2
 juce_add_plugin(DynamicRangeSentinel
     COMPANY_NAME          "OpusNexus"
     FORMATS               VST2
@@ -49,5 +37,12 @@ juce_add_plugin(DynamicRangeSentinel
     PLUGIN_VST2_CATEGORY  "Dynamics"
 )
 
-# Vincula nuestro código (PluginProcessor/Editor) y los recursos binarios al plugin
-target_link_libraries(DynamicRangeSentinel PRIVATE SharedCode)
+# Añade los archivos de código fuente y los recursos directamente al plugin
+target_sources(DynamicRangeSentinel PRIVATE
+    Source/PluginProcessor.cpp
+    Source/PluginProcessor.h
+    Source/PluginEditor.cpp
+    Source/PluginEditor.h
+)
+
+target_link_libraries(DynamicRangeSentinel PRIVATE BinaryData)

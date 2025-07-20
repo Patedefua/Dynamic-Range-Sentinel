@@ -17,9 +17,9 @@ jobs:
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
-          # Dependencias de audio + dependencias gráficas de bajo nivel (X11, FreeType)
+          # Lista de dependencias reducida al mínimo absoluto para una compilación autocontenida
           sudo apt-get update
-          sudo apt-get install -y libasound2-dev libjack-jackd2-dev libx11-dev libfreetype-dev libxrandr-dev libxinerama-dev libxcursor-dev libxext-dev
+          sudo apt-get install -y libasound2-dev libjack-jackd2-dev
 
       - name: Build
         id: build

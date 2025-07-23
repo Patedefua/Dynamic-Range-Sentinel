@@ -17,9 +17,9 @@ jobs:
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
-          # Dependencias de audio + las librerías gráficas de BAJO NIVEL que JUCE necesita
+          # El conjunto COMPLETO y DEFINITIVO de dependencias para JUCE en Linux.
           sudo apt-get update
-          sudo apt-get install -y libasound2-dev libjack-jackd2-dev libx11-dev libxext-dev libxinerama-dev libxrandr-dev libxcursor-dev libfreetype6-dev
+          sudo apt-get install -y libasound2-dev libjack-jackd2-dev libx11-dev libxext-dev libxinerama-dev libxrandr-dev libxcursor-dev libfreetype6-dev libgtk-3-dev
 
       - name: Build
         id: build
